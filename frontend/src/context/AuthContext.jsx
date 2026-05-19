@@ -9,9 +9,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("voicecast_user");
-      if (stored) return JSON.parse(stored);
+      if (stored && stored !== "undefined" && stored !== "null") {
+        return JSON.parse(stored);
+      }
       return null;
     } catch {
+      localStorage.removeItem("voicecast_user");
       return null;
     }
   });
@@ -53,12 +56,12 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     try {
       setUser(null);
-      localStorage.removeItem('voicecast_user');
-      localStorage.removeItem('token');
-      window.location.href = '/';
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/login';
     } catch (err) {
       console.error('Logout error:', err);
-      window.location.href = '/';
+      window.location.href = '/login';
     }
   };
 

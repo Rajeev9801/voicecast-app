@@ -89,7 +89,8 @@ export default function AdminPodcasts() {
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 bg-zinc-800 rounded-xl overflow-hidden shadow-inner border border-zinc-700/50 group-hover:border-green-500/30 transition-all">
                          {p.image ? (
-                           <img src={p.image.startsWith('http') ? p.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${p.image}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="cover" />
+                           <img src={p.image.startsWith('http') ? p.image : `${import.meta.env.VITE_API_URL || 'https://voicecast-app-production.up.railway.app'}/${p.image}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="cover" />
+
                          ) : (
                            <div className="w-full h-full flex items-center justify-center text-zinc-700 text-xl group-hover:bg-green-500/10 group-hover:text-green-500 transition-all">🎙️</div>
                          )}
@@ -117,7 +118,7 @@ export default function AdminPodcasts() {
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-2">
                       <a 
-                        href={p.audio.startsWith('http') ? p.audio : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${p.audio}`}
+                        href={p.audio.startsWith('http') ? p.audio : `${import.meta.env.VITE_API_URL || 'https://voicecast-app-production.up.railway.app'}${p.audio}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-3 rounded-xl text-zinc-600 hover:text-white hover:bg-zinc-800 transition-all active:scale-90"

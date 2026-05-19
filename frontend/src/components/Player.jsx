@@ -82,7 +82,8 @@ const Player = ({ currentPodcast, isPlaying, onPlayPause, audioRef, onNext, onPr
       <div className="flex items-center gap-4 w-[30%] min-w-[200px]">
         <div className="w-14 h-14 bg-zinc-800 rounded-md shadow-lg overflow-hidden flex-shrink-0 group relative">
           {currentPodcast?.image ? (
-            <img src={currentPodcast.image?.startsWith('http') ? currentPodcast.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${currentPodcast.image}`} alt="cover" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />          ) : (
+            <img src={currentPodcast.image?.startsWith('http') ? currentPodcast.image : `${import.meta.env.VITE_API_URL || 'https://voicecast-app-production.up.railway.app'}/${currentPodcast.image}`} alt="cover" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+          ) : (
             <div className="w-full h-full bg-gradient-to-br from-spotify-green/40 to-black flex items-center justify-center text-xs font-bold text-white/40 uppercase group-hover:scale-110 transition-transform">
               {currentPodcast?.title?.substring(0, 2) || 'VC'}
             </div>

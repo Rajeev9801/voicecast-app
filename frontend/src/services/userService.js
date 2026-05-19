@@ -24,15 +24,8 @@ export const userService = {
       const { data } = await api.get('/api/auth/profile');
       return data;
     } catch (err) {
-      return getStorageItem("voicecast_user", {
-        name: "Guest User",
-        email: "guest@voicecast.com",
-        avatar: null,
-        role: 'user',
-        playlists: [],
-        likedSongs: [],
-        recordings: []
-      });
+      // Return null instead of mock Guest to trigger login redirect
+      return null;
     }
   },
 

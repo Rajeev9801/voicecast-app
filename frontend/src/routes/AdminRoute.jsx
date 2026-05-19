@@ -13,11 +13,15 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  // Proper role-based protection
-  const isAdmin = user?.role === "admin" || user?.name === "amit";
+  // Strict role-based protection
+  const isAdmin = user?.role === "admin";
 
-  if (!user || !isAdmin) {
-    console.warn("Unauthorized access attempt to admin route");
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    console.warn("Unauthorized access attempt to admin route by:", user.email);
     return <Navigate to="/" replace />;
   }
 

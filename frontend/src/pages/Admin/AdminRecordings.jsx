@@ -115,7 +115,8 @@ export default function AdminRecordings() {
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-2">
                       <a 
-                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${r.url}`}
+                        href={`${import.meta.env.VITE_API_URL || 'https://voicecast-app-production.up.railway.app'}${r.url}`}
+
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-3 rounded-xl text-zinc-600 hover:text-white hover:bg-zinc-800 transition-all active:scale-90"
