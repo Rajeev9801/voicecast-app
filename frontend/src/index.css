@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-white selection:bg-spotify-green/30 overflow-hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom transitions */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Smooth gradient overlay */
+.main-gradient {
+  background: linear-gradient(to bottom, #1db95420 0%, #121212 100%);
+}
+
+.card-shadow {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.card-hover-shadow:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+}
