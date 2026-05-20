@@ -94,7 +94,7 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
       {/* RIGHT: Admin and User Status */}
       <div className="flex items-center gap-3 sm:gap-6 shrink-0">
         {/* 1. CURRENT USER ROLE BADGE (ADMIN ONLY) */}
-        {(user?.role === 'admin' || user?.name === 'amit') && (
+        {user?.role === 'admin' && (
           <div className="hidden lg:flex bg-red-600/10 border border-red-500/30 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.1)] items-center gap-2">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
             <span className="text-[9px] font-black text-red-500 uppercase tracking-widest whitespace-nowrap">
@@ -104,7 +104,7 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
         )}
 
         {/* 2. OPEN ADMIN PANEL BUTTON (ADMIN ONLY) */}
-        {(user?.role === 'admin' || user?.name === 'amit') && (
+        {user?.role === 'admin' && (
           <motion.button 
             whileHover={{ scale: 1.02, backgroundColor: '#ef4444', boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
             whileTap={{ scale: 0.98 }}
@@ -124,8 +124,8 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
             className="flex items-center gap-3 pl-4 border-l border-zinc-800 cursor-pointer group"
           >
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-black text-white leading-none group-hover:text-green-500 transition-colors">{user?.name || 'amit'}</p>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">USER</p>
+              <p className="text-sm font-black text-white leading-none group-hover:text-green-500 transition-colors">{user?.name || 'User'}</p>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">{user?.role?.toUpperCase() || 'USER'}</p>
             </div>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${isDropdownOpen ? 'bg-green-500 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-zinc-800 border-zinc-700 group-hover:border-zinc-500'}`}>
               <User size={20} className={isDropdownOpen ? 'text-black' : 'text-zinc-400 group-hover:text-white'} />
@@ -144,7 +144,7 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
               >
                 <div className="px-4 py-3 mb-2 border-b border-white/5">
                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Signed in as</p>
-                   <p className="text-xs font-bold text-white truncate">{user?.email || 'amit@voicecast.ai'}</p>
+                   <p className="text-xs font-bold text-white truncate">{user?.email || 'N/A'}</p>
                 </div>
 
                 <DropdownItem 

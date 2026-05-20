@@ -15,11 +15,19 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await register(name, email, password, role);
+      console.log("📨 [REGISTER] Submitting new node details for:", email);
+      const user = await register(name, email, password, role);
+      console.log("✅ [REGISTER] Registration successful. Role:", user.role);
       toast.success('Registration successful! Welcome to VoiceCast.');
-      navigate('/');
+      
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      console.error("❌ [REGISTER] Registration failed:", err);
+      toast.error(typeof err === 'string' ? err : 'Registration failed');
     }
   };
 

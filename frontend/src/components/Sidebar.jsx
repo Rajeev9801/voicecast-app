@@ -69,7 +69,7 @@ const Sidebar = () => {
             />
           ))}
           
-          {(user?.role === 'podcaster' || user?.role === 'admin' || user?.name === 'amit') && (
+          {(user?.role === 'podcaster' || user?.role === 'admin') && (
             <SidebarItem 
               to="/creator-dashboard"
               icon={<ListMusic size={24} />}
@@ -81,7 +81,7 @@ const Sidebar = () => {
         </div>
 
         {/* ADMIN CONTROLS */}
-        {(user?.role === 'admin' || user?.name === 'amit') && (
+        {user?.role === 'admin' && (
           <div className="mt-10 flex flex-col gap-2">
             <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-4 mb-2 opacity-80">Admin Center</h4>
             <SidebarItem 

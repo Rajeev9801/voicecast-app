@@ -11,10 +11,12 @@ const generateToken = (id) => {
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    console.log("📝 [AUTH] Registration attempt:", { name, email, role });
 
     const userExists = await User.findOne({ email });
 
     if (userExists) {
+      console.log("❌ [AUTH] Registration failed: Email exists", email);
       return res.status(400).json({ message: 'Email already registered' });
     }
 
@@ -26,6 +28,7 @@ export const registerUser = async (req, res) => {
     });
 
     if (user) {
+      console.log("✅ [AUTH] User created:", user.email);
       res.status(201).json({
         user: {
           _id: user._id,
@@ -39,6 +42,7 @@ export const registerUser = async (req, res) => {
       res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
+    console.error("🔥 [AUTH] Registration error:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -49,11 +53,12 @@ export const registerUser = async (req, res) => {
 export const authUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("LOGIN BODY:", req.body);
+    console.log("🔑 [AUTH] Login attempt:", email);
 
     const user = await User.findOne({ email });
 
     if (user && (await user.comparePassword(password))) {
+      console.log("✅ [AUTH] Login successful:", user.email, "Role:", user.role);
       res.json({
         user: {
           _id: user._id,
@@ -64,9 +69,11 @@ export const authUser = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
+      console.log("❌ [AUTH] Login failed: Invalid credentials for", email);
       res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
+    console.error("🔥 [AUTH] Login error:", error.message);
     res.status(500).json({ message: error.message });
   }
 };

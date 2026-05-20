@@ -17,9 +17,13 @@ export default function AdminLogin() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      console.log("🔐 [ADMIN] Attempting core authentication for:", email);
       const { data } = await api.post('/api/auth/login', { email, password });
       
+      console.log("📦 [ADMIN] Auth Response User:", data.user);
+
       if (data.user.role !== 'admin') {
+        console.warn("🚫 [ADMIN] Access denied: User is not an admin", data.user.role);
         toast.error('Unauthorized: Admin access required');
         return;
       }
@@ -27,12 +31,12 @@ export default function AdminLogin() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("voicecast_user", JSON.stringify(data.user));
 
-      console.log("ADMIN LOGIN SUCCESS:", data.user);
+      console.log("✅ [ADMIN] Authentication successful. Redirecting to dashboard...");
 
       setUser(data.user);
       navigate("/admin/dashboard");
     } catch (err) {
-      console.error("ADMIN LOGIN ERROR:", err);
+      console.error("🔥 [ADMIN] Authentication failed:", err.response?.data?.message || err.message);
       toast.error(err.response?.data?.message || 'Authentication failed');
     } finally {
       setIsSubmitting(false);

@@ -13,11 +13,19 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      console.log("📨 [LOGIN] Submitting credentials for:", email);
+      const user = await login(email, password);
+      console.log("✅ [LOGIN] Login successful. Role:", user.role);
       toast.success('Welcome back!');
-      navigate('/');
+      
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      console.error("❌ [LOGIN] Login failed:", err);
+      toast.error(typeof err === 'string' ? err : 'Login failed');
     }
   };
 

@@ -35,10 +35,8 @@ export const userService = {
       setStorageItem("voicecast_user", data);
       return data;
     } catch (err) {
-      const user = await userService.getProfile();
-      const updatedUser = { ...user, ...profileData };
-      setStorageItem("voicecast_user", updatedUser);
-      return updatedUser;
+      console.error('Update profile error:', err);
+      throw err;
     }
   },
 
@@ -48,17 +46,8 @@ export const userService = {
       const { data } = await api.post('/api/auth/like', { podcastId });
       return data;
     } catch (err) {
-      const user = await userService.getProfile();
-      const likedSongs = user.likedSongs || [];
-      const index = likedSongs.indexOf(podcastId);
-      if (index > -1) {
-        likedSongs.splice(index, 1);
-      } else {
-        likedSongs.push(podcastId);
-      }
-      const updatedUser = { ...user, likedSongs };
-      setStorageItem("voicecast_user", updatedUser);
-      return { likedSongs };
+      console.error('Toggle like error:', err);
+      throw err;
     }
   },
 
@@ -68,7 +57,8 @@ export const userService = {
       const { data } = await api.get('/api/auth/playlists');
       return data;
     } catch (err) {
-      return getStorageItem("voicecast_playlists", []);
+      console.error('Get playlists error:', err);
+      throw err;
     }
   },
 
@@ -77,29 +67,18 @@ export const userService = {
       const { data } = await api.post('/api/auth/playlists', { name });
       return data;
     } catch (err) {
-      const playlists = await userService.getPlaylists();
-      const newPlaylist = { _id: Date.now().toString(), name, recordings: [] };
-      const updatedPlaylists = [...playlists, newPlaylist];
-      setStorageItem("voicecast_playlists", updatedPlaylists);
-      return newPlaylist;
+      console.error('Create playlist error:', err);
+      throw err;
     }
   },
 
   addToPlaylist: async (playlistId, podcastId) => {
     try {
-      // Find playlist name first if needed, or update API to use ID
       const { data } = await api.post(`/api/auth/playlists/${playlistId}/add`, { podcastId });
       return data;
     } catch (err) {
-      const playlists = await userService.getPlaylists();
-      const updatedPlaylists = playlists.map(pl => {
-        if (pl._id === playlistId) {
-          return { ...pl, recordings: [...(pl.recordings || []), podcastId] };
-        }
-        return pl;
-      });
-      setStorageItem("voicecast_playlists", updatedPlaylists);
-      return { success: true };
+      console.error('Add to playlist error:', err);
+      throw err;
     }
   },
 
@@ -108,15 +87,8 @@ export const userService = {
       const { data } = await api.delete(`/api/auth/playlists/${playlistId}`);
       return data;
     } catch (err) {
-      const playlists = await userService.getPlaylists();
-      const updatedPlaylists = playlists.map(pl => {
-        if (pl._id === playlistId) {
-          return { ...pl, recordings: (pl.recordings || []).filter(id => id !== podcastId) };
-        }
-        return pl;
-      });
-      setStorageItem("voicecast_playlists", updatedPlaylists);
-      return { success: true };
+      console.error('Remove from playlist error:', err);
+      throw err;
     }
   },
 
@@ -125,10 +97,8 @@ export const userService = {
       const { data } = await api.delete(`/api/auth/playlists/${playlistId}`);
       return data;
     } catch (err) {
-      const playlists = await userService.getPlaylists();
-      const updatedPlaylists = playlists.filter(pl => pl._id !== playlistId);
-      setStorageItem("voicecast_playlists", updatedPlaylists);
-      return { success: true };
+      console.error('Delete playlist error:', err);
+      throw err;
     }
   },
 
@@ -138,8 +108,8 @@ export const userService = {
       const { data } = await api.get('/api/auth/history');
       return data;
     } catch (err) {
-      const history = getStorageItem("voicecast_history", []);
-      return { history };
+      console.error('Get history error:', err);
+      throw err;
     }
   },
 
@@ -148,11 +118,8 @@ export const userService = {
       const { data } = await api.post('/api/auth/history', { podcastId });
       return data;
     } catch (err) {
-      const history = getStorageItem("voicecast_history", []);
-      const newEntry = { podcast: { _id: podcastId, title: 'Mock Recording', author: 'VoiceCast' }, listenedAt: new Date().toISOString() };
-      const updatedHistory = [newEntry, ...history].slice(0, 20);
-      setStorageItem("voicecast_history", updatedHistory);
-      return { success: true };
+      console.error('Add to history error:', err);
+      throw err;
     }
   },
 

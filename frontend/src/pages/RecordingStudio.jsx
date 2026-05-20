@@ -133,7 +133,7 @@ export default function RecordingStudio() {
         title: finalTitle,
         createdAt: new Date().toISOString(),
         url: audioUrl, // In a real app, we'd store the blob in IndexedDB, but for stability mode this works
-        author: user?.name || 'Guest User'
+        author: user?.name || 'Anonymous Creator'
       };
 
       // Update global recordings

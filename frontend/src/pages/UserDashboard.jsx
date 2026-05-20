@@ -52,10 +52,10 @@ export default function UserDashboard() {
   if (loading) return <div className="p-8 text-zinc-500">Loading your space...</div>;
 
   const safeProfile = profile || {
-    name: "Guest User",
-    email: "guest@voicecast.com",
+    name: user?.name || "User",
+    email: user?.email || "N/A",
     avatar: null,
-    role: 'user',
+    role: user?.role || 'user',
     playlists: [],
     likedSongs: [],
     recordings: []
