@@ -69,7 +69,7 @@ export const VoiceProvider = ({ children }) => {
       }
 
       if (audioUrl && audioRef.current) {
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://voicecast-app-production.up.railway.app';
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         const finalUrl = audioUrl.startsWith('http') ? audioUrl : `${baseUrl}${audioUrl.startsWith('/') ? '' : '/'}${audioUrl}`;
         audioRef.current.pause();
         audioRef.current.src = finalUrl;

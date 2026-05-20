@@ -62,6 +62,15 @@ export default function App() {
   const [trendingPodcasts, setTrendingPodcasts] = useState([]);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
+  useEffect(() => {
+    // Clear old auth data on startup
+    localStorage.removeItem('token');
+    localStorage.removeItem('voicecast_user');
+    localStorage.removeItem('user');
+    sessionStorage.clear();
+    console.log("🧹 [APP] Cleared stale session data on startup");
+  }, []);
+
   const diagnostics = useVoiceDiagnostics();
 
   useEffect(() => {
@@ -93,11 +102,11 @@ export default function App() {
   );
 
   return (
-    <div className="flex h-screen bg-black text-white font-sans overflow-hidden">
+    <div className="flex h-screen bg-black text-white font-sans overflow-x-hidden max-w-full">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col relative overflow-y-auto bg-zinc-900">
-        <main className="pb-32">
+      <div className="flex-1 flex flex-col relative overflow-y-auto overflow-x-hidden max-w-full bg-zinc-900">
+        <main className="pb-48 md:pb-32 w-full overflow-x-hidden max-w-full">
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<Home podcasts={podcasts} trendingPodcasts={trendingPodcasts} />} />

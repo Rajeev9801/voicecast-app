@@ -1,9 +1,9 @@
 const MOCK_PODCASTS = [
-  { _id: '1', title: 'The Daily Voice', author: 'VoiceCast', category: 'News', duration: '15:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', cover: 'https://images.unsplash.com/photo-1478737270239-2fccd27ee1f3?auto=format&fit=crop&q=80&w=400' },
-  { _id: '2', title: 'Tech Talk', author: 'Silicon Valley', category: 'Technology', duration: '45:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', cover: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=400' },
-  { _id: '3', title: 'Mindset Matters', author: 'Growth Co.', category: 'Self-Help', duration: '20:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', cover: 'https://images.unsplash.com/photo-1499209974431-9dac3e5c97de?auto=format&fit=crop&q=80&w=400' },
-  { _id: '4', title: 'Creative Minds', author: 'Art Pulse', category: 'Design', duration: '32:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', cover: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=400' },
-  { _id: '5', title: 'Future Pulse', author: 'Deep Blue', category: 'Science', duration: '28:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', cover: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400' },
+  { _id: '1', title: 'The Daily Voice', author: 'VoiceCast', category: 'News', duration: '15:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1200&auto=format&fit=crop' },
+  { _id: '2', title: 'Tech Talk', author: 'Silicon Valley', category: 'Technology', duration: '45:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', cover: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=400' },
+  { _id: '3', title: 'Mindset Matters', author: 'Growth Co.', category: 'Self-Help', duration: '20:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', cover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop' },
+  { _id: '4', title: 'Creative Minds', author: 'Art Pulse', category: 'Design', duration: '32:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', cover: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400' },
+  { _id: '5', title: 'Future Pulse', author: 'Deep Blue', category: 'Science', duration: '28:00', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', cover: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=400' },
 ];
 
 const getLocalRecordings = () => {

@@ -45,7 +45,7 @@ const Library = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             <div className="bg-zinc-800/40 p-6 rounded-2xl hover:bg-zinc-800/60 transition-all border border-zinc-800 group cursor-pointer">
               <div className="w-12 h-12 bg-pink-500/20 text-pink-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Heart size={24} fill="currentColor" />
@@ -66,7 +66,7 @@ const Library = () => {
         <div className="flex-1">
           <h3 className="text-xl font-bold mb-6">Saved Content</h3>
           {podcasts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {podcasts.slice(0, 10).map((podcast) => (
                 <PodcastCard 
                   key={podcast._id || podcast.id} 

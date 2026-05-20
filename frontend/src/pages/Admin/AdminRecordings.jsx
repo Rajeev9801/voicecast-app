@@ -19,7 +19,8 @@ export default function AdminRecordings() {
       const data = await userService.getAllRecordingsAdmin();
       setRecordings(data);
     } catch (err) {
-      toast.error('Failed to intercept recording data');
+      console.error("Admin Recordings Error:", err);
+      toast.error(err?.response?.data?.message || err.message || 'Failed to intercept recording data');
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,7 @@ export default function AdminRecordings() {
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-2">
                       <a 
-                        href={`${import.meta.env.VITE_API_URL || 'https://voicecast-app-production.up.railway.app'}${r.url}`}
+                        href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${r.url}`}
 
                         target="_blank"
                         rel="noopener noreferrer"

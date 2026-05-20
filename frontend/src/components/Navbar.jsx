@@ -32,10 +32,10 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
   };
 
   return (
-    <header className="bg-black/95 backdrop-blur-xl sticky top-0 z-40 px-8 py-4 flex items-center justify-between border-b border-zinc-800 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+    <header className="bg-black/95 backdrop-blur-xl sticky top-0 z-40 px-4 sm:px-8 py-3 sm:py-4 flex flex-col md:flex-row items-center justify-between border-b border-zinc-800 shadow-[0_4px_30px_rgba(0,0,0,0.5)] gap-4">
       {/* LEFT: Navigation and Search */}
-      <div className="flex items-center gap-4 flex-1">
-        <div className="flex items-center gap-2 mr-6">
+      <div className="flex items-center gap-4 w-full md:flex-1">
+        <div className="hidden md:flex items-center gap-2 mr-6">
           <button onClick={() => navigate(-1)} className="p-1.5 bg-zinc-900 rounded-full text-zinc-400 hover:text-white transition-all hover:bg-zinc-800 border border-zinc-800">
             <ChevronLeft size={20} />
           </button>
@@ -44,7 +44,7 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
           </button>
         </div>
 
-        <div className="relative group flex-1 max-w-md">
+        <div className="relative group flex-1 w-full max-w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-green-500 transition-colors" size={18} />
           <input
             type="text"
@@ -92,10 +92,10 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
       </div>
 
       {/* RIGHT: Admin and User Status */}
-      <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+      <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-3 sm:gap-6 shrink-0">
         {/* 1. CURRENT USER ROLE BADGE (ADMIN ONLY) */}
         {user?.role === 'admin' && (
-          <div className="hidden lg:flex bg-red-600/10 border border-red-500/30 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.1)] items-center gap-2">
+          <div className="hidden sm:flex bg-red-600/10 border border-red-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.1)] items-center gap-2">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
             <span className="text-[9px] font-black text-red-500 uppercase tracking-widest whitespace-nowrap">
               ROLE: {user?.role || 'user'}
@@ -109,16 +109,15 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
             whileHover={{ scale: 1.02, backgroundColor: '#ef4444', boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 bg-red-600 text-white px-4 sm:px-5 py-2.5 rounded-xl shadow-lg shadow-red-600/20 border border-red-500/50 transition-all duration-300 whitespace-nowrap font-black text-[10px] sm:text-xs uppercase tracking-[0.15em]"
+            className="flex items-center gap-2 bg-red-600 text-white px-3 sm:px-5 py-2 rounded-xl shadow-lg shadow-red-600/20 border border-red-500/50 transition-all duration-300 whitespace-nowrap font-black text-[9px] sm:text-xs uppercase tracking-[0.15em]"
           >
-            <ShieldAlert size={16} className="text-white" />
-            <span className="hidden xs:inline">ADMIN PANEL</span>
-            <span className="xs:hidden">ADMIN</span>
+            <ShieldAlert size={14} className="text-white sm:size-4" />
+            <span>ADMIN</span>
           </motion.button>
         )}
 
         {/* 3. PREMIUM USER PROFILE SECTION */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative ml-auto md:ml-0" ref={dropdownRef}>
           <div 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-3 pl-4 border-l border-zinc-800 cursor-pointer group"

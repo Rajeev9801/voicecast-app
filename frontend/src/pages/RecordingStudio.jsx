@@ -127,29 +127,32 @@ export default function RecordingStudio() {
     setIsUploading(true);
 
     try {
-      // Create a local entry
-      const newRecording = {
-        _id: `rec-${Date.now()}`,
-        title: finalTitle,
-        createdAt: new Date().toISOString(),
-        url: audioUrl, // In a real app, we'd store the blob in IndexedDB, but for stability mode this works
-        author: user?.name || 'Anonymous Creator'
-      };
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "recording.webm");
+      formData.append("title", finalTitle);
 
-      // Update global recordings
-      const allRecordings = JSON.parse(localStorage.getItem('voicecast_recordings') || '[]');
-      allRecordings.push(newRecording);
-      localStorage.setItem('voicecast_recordings', JSON.stringify(allRecordings));
+      const response = await api.post('/api/recordings', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
-      // Update user's profile recordings
-      const userData = JSON.parse(localStorage.getItem('voicecast_user') || '{}');
-      userData.recordings = [...(userData.recordings || []), newRecording];
-      localStorage.setItem('voicecast_user', JSON.stringify(userData));
+      // Also update local cache for UI continuity if needed
+      const newRecording = response.data.recording;
+      if (newRecording) {
+        const allRecordings = JSON.parse(localStorage.getItem('voicecast_recordings') || '[]');
+        allRecordings.push(newRecording);
+        localStorage.setItem('voicecast_recordings', JSON.stringify(allRecordings));
+        
+        const userData = JSON.parse(localStorage.getItem('voicecast_user') || '{}');
+        userData.recordings = [...(userData.recordings || []), newRecording];
+        localStorage.setItem('voicecast_user', JSON.stringify(userData));
+      }
 
-      toast.success('Recording published locally!');
+      toast.success('Recording published successfully!');
     } catch (err) {
-      console.error('Local save failed', err);
-      toast.error('Failed to save recording');
+      console.error('Server save failed', err);
+      toast.error('Failed to save recording to server');
     } finally {
       setIsUploading(false);
       setTitle('');
@@ -167,38 +170,38 @@ export default function RecordingStudio() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto min-h-screen bg-black text-white">
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold mb-2">Recording Studio</h1>
-        <p className="text-zinc-400">Capture your voice. Build your podcast.</p>
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto min-h-screen bg-black text-white">
+      <div className="mb-8 sm:mb-12">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2">Recording Studio</h1>
+        <p className="text-zinc-400 text-sm sm:text-base">Capture your voice. Build your podcast.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 bg-zinc-900 p-8 rounded-3xl border border-zinc-800 flex flex-col items-center">
-          <div className="relative w-full h-48 bg-zinc-950 rounded-2xl overflow-hidden mb-8 border border-zinc-800">
+      <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+        <div className="w-full lg:w-2/3 bg-zinc-900 p-4 sm:p-8 rounded-3xl border border-zinc-800 flex flex-col items-center">
+          <div className="relative w-full h-40 sm:h-48 bg-zinc-950 rounded-2xl overflow-hidden mb-6 sm:mb-8 border border-zinc-800">
             <canvas ref={canvasRef} width="800" height="200" className="w-full h-full" />
             {!isRecording && !audioUrl && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-600">
-                <Mic size={48} className="mb-2 opacity-20" />
-                <p>Ready to record</p>
+                <Mic size={32} className="sm:size-[48px] mb-2 opacity-20" />
+                <p className="text-sm">Ready to record</p>
               </div>
             )}
             {isPaused && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <span className="text-yellow-500 font-bold text-xl uppercase tracking-widest">Paused</span>
+                    <span className="text-yellow-500 font-bold text-lg sm:text-xl uppercase tracking-widest">Paused</span>
                 </div>
             )}
           </div>
 
-          <div className="text-6xl font-mono mb-10 text-green-500 tabular-nums">
+          <div className="text-4xl sm:text-6xl font-mono mb-8 sm:mb-10 text-green-500 tabular-nums">
             {formatTime(recordingTime)}
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 relative">
+          <div className="flex flex-col md:flex-row justify-center gap-4 relative w-full sm:w-auto">
             {/* Voice Control Badge */}
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-4 py-1.5 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Voice Control Active</span>
+            <div className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full whitespace-nowrap">
+              <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-[9px] sm:text-[10px] font-black text-green-500 uppercase tracking-widest">Voice Control Active</span>
             </div>
 
             {!isRecording && !isPaused ? (
@@ -206,41 +209,41 @@ export default function RecordingStudio() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={startRecording}
-                className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full font-bold flex items-center gap-3 shadow-lg shadow-red-500/20"
+                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full font-bold flex items-center justify-center gap-3 shadow-lg shadow-red-500/20"
               >
                 <Mic size={20} />
                 Start Recording
               </motion.button>
             ) : (
-              <>
+              <div className="flex flex-col md:flex-row gap-4 w-full sm:w-auto">
                 {isPaused ? (
                   <button
                     onClick={resumeRecording}
-                    className="bg-green-500 hover:bg-green-600 text-black px-6 py-4 rounded-full font-bold flex items-center gap-2"
+                    className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-black px-6 py-4 rounded-full font-bold flex items-center justify-center gap-2"
                   >
                     <Play size={20} /> Resume
                   </button>
                 ) : (
                   <button
                     onClick={pauseRecording}
-                    className="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-4 rounded-full font-bold flex items-center gap-2"
+                    className="w-full sm:w-auto bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-4 rounded-full font-bold flex items-center justify-center gap-2"
                   >
                     <Pause size={20} /> Pause
                   </button>
                 )}
                 <button
                   onClick={stopRecording}
-                  className="bg-white hover:bg-zinc-200 text-black px-8 py-4 rounded-full font-bold flex items-center gap-2 shadow-lg"
+                  className="w-full sm:w-auto bg-white hover:bg-zinc-200 text-black px-8 py-4 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg"
                 >
                   <Square size={20} fill="black" /> Stop
                 </button>
-              </>
+              </div>
             )}
             
             {audioUrl && !isRecording && (
                 <button
                     onClick={resetRecording}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-6 py-4 rounded-full font-bold flex items-center gap-2"
+                    className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-6 py-4 rounded-full font-bold flex items-center justify-center gap-2"
                 >
                     <Trash2 size={20} /> Delete
                 </button>
@@ -251,7 +254,7 @@ export default function RecordingStudio() {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-10 w-full bg-zinc-800/50 p-6 rounded-2xl border border-zinc-700"
+              className="mt-8 sm:mt-10 w-full bg-zinc-800/50 p-4 sm:p-6 rounded-2xl border border-zinc-700"
             >
               <h3 className="text-sm font-semibold text-zinc-400 mb-4 flex items-center gap-2">
                 <Volume2 size={16} /> Preview Recording
@@ -261,7 +264,7 @@ export default function RecordingStudio() {
           )}
         </div>
 
-        <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800 sticky top-8">
+        <div className="w-full bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-zinc-800 md:sticky md:top-8">
           <h2 className="text-xl font-bold mb-6">Recording Info</h2>
           
           <div className="space-y-6">
@@ -272,11 +275,11 @@ export default function RecordingStudio() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="My Awesome Podcast Episode..."
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all text-sm sm:text-base"
               />
             </div>
 
-            <div className="pt-4">
+            <div className="pt-2 sm:pt-4">
               <button
                 disabled={!audioBlob || isUploading || !title}
                 onClick={handleUpload}
@@ -297,7 +300,7 @@ export default function RecordingStudio() {
               </button>
             </div>
 
-            <div className="bg-green-500/5 border border-green-500/10 p-4 rounded-xl text-xs text-zinc-500 space-y-3">
+            <div className="bg-green-500/5 border border-green-500/10 p-4 rounded-xl text-[10px] sm:text-xs text-zinc-500 space-y-3">
                 <p className="flex items-start gap-2">
                     <span className="text-green-500 mt-1">●</span>
                     <span>Make sure you are in a quiet environment for the best audio quality.</span>

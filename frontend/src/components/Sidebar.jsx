@@ -32,96 +32,145 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-black flex flex-col h-full border-r border-zinc-900 overflow-y-auto">
-      <div className="p-6 flex flex-col h-full min-h-[calc(100vh-4rem)]">
-        {/* LOGO */}
-        <div 
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 mb-8 group cursor-pointer"
-        >
-          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-            <Library className="text-black" size={24} />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">VoiceCast</span>
-        </div>
-
-        {/* MAIN NAV */}
-        <nav className="flex flex-col gap-4">
-          {menuItems.map((item) => (
-            <SidebarItem 
-              key={item.to}
-              {...item}
-              active={isActive(item.to)}
-              onClick={() => navigate(item.to)}
-            />
-          ))}
-        </nav>
-
-        {/* FEATURES */}
-        <div className="mt-10 flex flex-col gap-4">
-          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Features</h4>
-          {featureItems.map((item) => (
-            <SidebarItem 
-              key={item.to}
-              {...item}
-              active={isActive(item.to)}
-              onClick={() => navigate(item.to)}
-            />
-          ))}
-          
-          {(user?.role === 'podcaster' || user?.role === 'admin') && (
-            <SidebarItem 
-              to="/creator-dashboard"
-              icon={<ListMusic size={24} />}
-              label="Creator Panel"
-              active={isActive('/creator-dashboard')}
-              onClick={() => navigate('/creator-dashboard')}
-            />
-          )}
-        </div>
-
-        {/* ADMIN CONTROLS */}
-        {user?.role === 'admin' && (
-          <div className="mt-10 flex flex-col gap-2">
-            <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-4 mb-2 opacity-80">Admin Center</h4>
-            <SidebarItem 
-              to="/admin"
-              icon={<ShieldAlert size={22} />}
-              label="Admin Dashboard"
-              active={location.pathname.startsWith('/admin')}
-              onClick={() => navigate('/admin')}
-              variant="admin"
-            />
-          </div>
-        )}
-
-        {/* PLAYLISTS */}
-        <div className="mt-10 flex flex-col gap-4">
-          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Playlists</h4>
-          {playlistItems.map((item) => (
-            <SidebarItem 
-              key={item.to}
-              {...item}
-              active={isActive(item.to)}
-              onClick={() => navigate(item.to)}
-            />
-          ))}
-        </div>
-
-        {/* LOGOUT */}
-        <div className="mt-auto pt-10 pb-4">
-           <button 
-            onClick={handleLogout}
-            className="flex items-center gap-4 text-zinc-500 hover:text-red-500 transition-all duration-300 group px-1 w-full"
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 bg-black flex-col h-screen border-r border-zinc-900 shrink-0 overflow-y-auto">
+        <div className="p-6 flex flex-col h-full">
+          {/* LOGO */}
+          <div 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 mb-8 group cursor-pointer"
           >
-            <span className="transition-transform group-hover:scale-110"><LogOut size={24} /></span>
-            <span className="text-sm font-bold tracking-tight">Logout</span>
-          </button>
+            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+              <Library className="text-black" size={24} />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-white">VoiceCast</span>
+          </div>
+
+          {/* MAIN NAV */}
+          <nav className="flex flex-col gap-4">
+            {menuItems.map((item) => (
+              <SidebarItem 
+                key={item.to}
+                {...item}
+                active={isActive(item.to)}
+                onClick={() => navigate(item.to)}
+              />
+            ))}
+          </nav>
+
+          {/* FEATURES */}
+          <div className="mt-10 flex flex-col gap-4">
+            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Features</h4>
+            {featureItems.map((item) => (
+              <SidebarItem 
+                key={item.to}
+                {...item}
+                active={isActive(item.to)}
+                onClick={() => navigate(item.to)}
+              />
+            ))}
+            
+            {(user?.role === 'podcaster' || user?.role === 'admin') && (
+              <SidebarItem 
+                to="/creator-dashboard"
+                icon={<ListMusic size={24} />}
+                label="Creator Panel"
+                active={isActive('/creator-dashboard')}
+                onClick={() => navigate('/creator-dashboard')}
+              />
+            )}
+          </div>
+
+          {/* ADMIN CONTROLS */}
+          {user?.role === 'admin' && (
+            <div className="mt-10 flex flex-col gap-2">
+              <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] px-4 mb-2 opacity-80">Admin Center</h4>
+              <SidebarItem 
+                to="/admin"
+                icon={<ShieldAlert size={22} />}
+                label="Admin Dashboard"
+                active={location.pathname.startsWith('/admin')}
+                onClick={() => navigate('/admin')}
+                variant="admin"
+              />
+            </div>
+          )}
+
+          {/* PLAYLISTS */}
+          <div className="mt-10 flex flex-col gap-4">
+            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Playlists</h4>
+            {playlistItems.map((item) => (
+              <SidebarItem 
+                key={item.to}
+                {...item}
+                active={isActive(item.to)}
+                onClick={() => navigate(item.to)}
+              />
+            ))}
+          </div>
+
+          {/* LOGOUT */}
+          <div className="mt-auto pt-10 pb-4">
+             <button 
+              onClick={handleLogout}
+              className="flex items-center gap-4 text-zinc-500 hover:text-red-500 transition-all duration-300 group px-1 w-full"
+            >
+              <span className="transition-transform group-hover:scale-110"><LogOut size={24} /></span>
+              <span className="text-sm font-bold tracking-tight">Logout</span>
+            </button>
+          </div>
         </div>
+      </aside>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 md:hidden z-[999] bg-black border-t border-zinc-800 flex justify-around items-center py-3">
+        <MobileNavItem 
+          icon={<Home size={24} />} 
+          label="Home" 
+          active={isActive('/')} 
+          onClick={() => navigate('/')} 
+        />
+        <MobileNavItem 
+          icon={<Search size={24} />} 
+          label="Search" 
+          active={isActive('/search')} 
+          onClick={() => navigate('/search')} 
+        />
+        <MobileNavItem 
+          icon={<Library size={24} />} 
+          label="Library" 
+          active={isActive('/library')} 
+          onClick={() => navigate('/library')} 
+        />
+        <MobileNavItem 
+          icon={<Mic size={24} />} 
+          label="Record" 
+          active={isActive('/record')} 
+          onClick={() => navigate('/record')} 
+        />
+        <MobileNavItem 
+          icon={<User size={24} />} 
+          label="Dashboard" 
+          active={isActive('/dashboard')} 
+          onClick={() => navigate('/dashboard')} 
+        />
       </div>
-    </aside>
+    </>
   );
 };
+
+const MobileNavItem = ({ icon, label, active, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`flex flex-col items-center gap-1 transition-colors duration-300 ${active ? 'text-green-500' : 'text-zinc-500'}`}
+  >
+    {React.cloneElement(icon, { size: 20 })}
+    <span className={`text-[10px] font-bold uppercase tracking-tighter ${active ? 'text-white' : ''}`}>
+      {label}
+    </span>
+  </button>
+);
 
 const SidebarItem = ({ icon, label, active, onClick, variant }) => {
   const baseClasses = "flex items-center gap-4 transition-all duration-300 group px-4 py-3 w-full text-left rounded-xl mb-1";

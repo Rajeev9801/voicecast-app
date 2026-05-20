@@ -53,7 +53,7 @@ export default function Home({ podcasts: initialPodcasts, trendingPodcasts }) {
   }, []);
 
   const renderPodcastGrid = (podcastsToRender) => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-6 gap-y-10">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
       {podcastsToRender.map(podcast => (
         <PodcastCard 
           key={podcast.id || podcast._id}
@@ -70,22 +70,40 @@ export default function Home({ podcasts: initialPodcasts, trendingPodcasts }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex-1 flex flex-col relative bg-zinc-900 min-h-screen"
+      className="flex-1 flex flex-col relative bg-zinc-900 min-h-screen max-w-full overflow-x-hidden"
     >
       <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-      <div className="px-8 py-6 relative z-10">
+      <div className="px-4 sm:px-8 py-6 relative z-10 w-full overflow-x-hidden">
         
         {/* Recommended Podcasts Section */}
-        <section className="mb-10">
-          <h1 className="text-3xl font-bold tracking-tight mb-6">Recommended Podcasts</h1>
-          {renderPodcastGrid(filteredRecommended)}
+        <section className="mb-10 w-full">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Recommended Podcasts</h1>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredRecommended.map(podcast => (
+              <PodcastCard 
+                key={podcast.id || podcast._id}
+                podcast={podcast}
+                onSelect={playPodcast}
+                isCurrent={currentPodcast?.id === podcast.id || currentPodcast?._id === podcast._id}
+              />
+            ))}
+          </div>
         </section>
 
         {/* Global Trending Section */}
-        <section className="mb-10">
-          <h2 className="text-3xl font-bold tracking-tight mb-6">Global Trending</h2>
-          {renderPodcastGrid(filteredTrending)}
+        <section className="mb-10 w-full">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Global Trending</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredTrending.map(podcast => (
+              <PodcastCard 
+                key={podcast.id || podcast._id}
+                podcast={podcast}
+                onSelect={playPodcast}
+                isCurrent={currentPodcast?.id === podcast.id || currentPodcast?._id === podcast._id}
+              />
+            ))}
+          </div>
         </section>
 
         {/* Empty State - Only show if actively searching and NO results match across both arrays */}

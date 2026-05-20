@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useVoice } from '../context/VoiceContext';
 import { podcastService } from '../services/podcastService';
 import Navbar from '../components/Navbar';
+import PodcastCard from '../components/PodcastCard';
 import { motion } from 'framer-motion';
 
 export default function Search() {
@@ -71,40 +72,12 @@ export default function Search() {
   const renderPodcastGrid = (podcastsToRender) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {podcastsToRender.map(podcast => (
-        <div
+        <PodcastCard 
           key={podcast.id || podcast._id}
-          onClick={() => playPodcast(podcast)}
-          className={`
-            bg-zinc-800/40 p-4 rounded-xl hover:bg-zinc-800/80 transition-all cursor-pointer group
-            ${currentPodcast?.id === podcast.id || currentPodcast?._id === podcast._id ? 'ring-2 ring-green-500 bg-zinc-800/60 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : ''}
-          `}
-        >
-          <div className="w-full aspect-square bg-zinc-700 rounded-lg mb-4 overflow-hidden relative shadow-lg group-hover:scale-[1.02] transition">
-            {podcast.image || podcast.imageUrl ? (
-              <img 
-                src={podcast.image || podcast.imageUrl} 
-                alt={podcast.title} 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-4xl bg-zinc-800">🎙️</div>
-            )}
-            
-            {/* Play Button Overlay */}
-            <div className={`
-              absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full items-center justify-center shadow-xl
-              flex opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all
-              ${(currentPodcast?.id === podcast.id || currentPodcast?._id === podcast._id) && isPlaying ? 'opacity-100 translate-y-0' : ''}
-            `}>
-              <span className="text-black text-xl">
-                {(currentPodcast?.id === podcast.id || currentPodcast?._id === podcast._id) && isPlaying ? '⏸️' : '▶️'}
-              </span>
-            </div>
-          </div>
-          
-          <h3 className="font-bold text-sm mb-1 truncate text-white">{podcast.title}</h3>
-          <p className="text-zinc-400 text-xs truncate">{podcast.author || 'Unknown Artist'}</p>
-        </div>
+          podcast={podcast}
+          onSelect={playPodcast}
+          isCurrent={currentPodcast?.id === podcast.id || currentPodcast?._id === podcast._id}
+        />
       ))}
     </div>
   );
@@ -150,7 +123,7 @@ export default function Search() {
         {(searchQuery.trim() === "" || filteredPodcasts.length === 0) && podcasts.length > 0 && (
           <div className="mt-16 border-t border-zinc-800 pt-10">
             <h2 className="text-2xl font-bold mb-6 text-zinc-400">Recommended for you</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 opacity-60">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 opacity-60">
               {podcasts.slice(0, 6).map(p => (
                 <div key={`rec-${p.id || p._id}`} onClick={() => playPodcast(p)} className="cursor-pointer hover:opacity-100 transition">
                   <div className="aspect-square bg-zinc-800 rounded-lg mb-2 overflow-hidden shadow-lg">
