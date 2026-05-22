@@ -139,33 +139,27 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="absolute right-0 top-full mt-4 w-56 bg-zinc-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-2 z-50 overflow-hidden"
+                className="absolute right-0 top-full mt-4 w-60 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-2 z-50 overflow-hidden"
               >
-                <div className="px-4 py-3 mb-2 border-b border-white/5">
-                   <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Signed in as</p>
-                   <p className="text-xs font-bold text-white truncate">{user?.email || 'N/A'}</p>
+                <div className="px-4 py-3 mb-1">
+                   <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Login</p>
                 </div>
 
                 <DropdownItem 
-                  icon={<UserCircle size={18} />} 
-                  label="Profile" 
-                  onClick={() => { navigate('/profile'); setIsDropdownOpen(false); }} 
+                  icon={<User size={18} />} 
+                  label="Login as User" 
+                  onClick={() => { navigate('/login/user'); setIsDropdownOpen(false); }} 
                 />
                 <DropdownItem 
-                  icon={<Settings size={18} />} 
-                  label="Settings" 
-                  onClick={() => { navigate('/settings'); setIsDropdownOpen(false); }} 
+                  icon={<Mic size={18} />} 
+                  label="Login as Artist" 
+                  onClick={() => { navigate('/login/artist'); setIsDropdownOpen(false); }} 
                 />
-                
-                <div className="my-2 h-px bg-white/5" />
-                
-                <button
-                  onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all font-bold text-xs uppercase tracking-widest group"
-                >
-                  <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
-                  Sign Out
-                </button>
+                <DropdownItem 
+                  icon={<ShieldAlert size={18} />} 
+                  label="Login as Admin" 
+                  onClick={() => { navigate('/login/admin'); setIsDropdownOpen(false); }} 
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -178,10 +172,11 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
 const DropdownItem = ({ icon, label, onClick }) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all font-bold text-xs uppercase tracking-widest group"
+    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-all duration-200 font-bold text-[11px] uppercase tracking-[0.1em] group relative"
   >
-    <span className="text-zinc-500 group-hover:text-green-500 transition-colors">{icon}</span>
-    {label}
+    <span className="text-zinc-500 group-hover:text-green-500 group-hover:drop-shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-200">{icon}</span>
+    <span className="relative z-10">{label}</span>
+    <div className="absolute right-2 w-1 h-1 rounded-full bg-green-500 opacity-0 group-hover:opacity-100 group-hover:shadow-[0_0_8px_rgba(34,197,94,0.8)] transition-all duration-200" />
   </button>
 );
 

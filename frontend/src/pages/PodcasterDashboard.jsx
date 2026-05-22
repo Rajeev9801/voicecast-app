@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
 import { podcastService } from '../services/podcastService';
 import { useAuth } from '../context/AuthContext';
+import { useVoice } from '../context/VoiceContext';
 import { toast } from 'react-toastify';
 import { Mic, Radio, Upload, Trash2, Edit, BarChart, Users, Play } from 'lucide-react';
 
 export default function PodcasterDashboard() {
   const { user } = useAuth();
+  const { playPodcast } = useVoice();
+  const navigate = useNavigate();
   const [podcasts, setPodcasts] = useState([]);
   const [recordings, setRecordings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,8 +26,7 @@ export default function PodcasterDashboard() {
       setRecordings(profile.recordings || []);
       
       // Fetch podcasts by this user
-      const allPodcasts = await podcastService.getRecommended();
-      const myPodcasts = allPodcasts.filter(p => p.creator?._id === user?._id || p.createdBy === user?._id || p.uploadedBy === user?._id);
+      const myPodcasts = await podcastService.getMyPodcasts();
       setPodcasts(myPodcasts);
       
       // Mock stats
@@ -41,7 +44,7 @@ export default function PodcasterDashboard() {
   const deletePodcast = async (id) => {
     if (!window.confirm('Delete this podcast?')) return;
     try {
-      await podcastService.deletePodcast(id); // Ensure this exists or use axios
+      await podcastService.deletePodcast(id);
       toast.success('Podcast deleted');
       setPodcasts(podcasts.filter(p => p._id !== id));
     } catch (err) {
@@ -59,10 +62,10 @@ export default function PodcasterDashboard() {
           <p className="text-zinc-400">Manage your content and track your performance</p>
         </div>
         <button 
-          onClick={() => window.location.href = '/record'}
+          onClick={() => navigate('/add-podcast')}
           className="bg-green-500 text-black font-bold px-6 py-3 rounded-full hover:scale-105 transition-transform"
         >
-          New Podcast
+          Add Podcast
         </button>
       </div>
 
@@ -86,14 +89,28 @@ export default function PodcasterDashboard() {
                 {podcasts.map(p => (
                   <div key={p._id} className="flex items-center justify-between bg-black/20 p-4 rounded-2xl border border-zinc-800/50">
                     <div className="flex items-center gap-4">
-                      <img src={p.image || '/default-podcast.png'} className="w-12 h-12 rounded-lg object-cover" alt="" />
+                      <img 
+                        src={(p.thumbnail || p.image || '').startsWith('/uploads/') ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${p.thumbnail || p.image}` : (p.thumbnail || p.image || '/default-podcast.png')} 
+                        className="w-12 h-12 rounded-lg object-cover" 
+                        alt="" 
+                        onError={(e) => { e.target.src = '/default-podcast.png'; }}
+                      />
                       <div>
                         <h4 className="font-bold text-sm">{p.title}</h4>
-                        <p className="text-[10px] text-zinc-500 uppercase">{p.category || 'General'}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] text-zinc-500 uppercase">{p.genre || p.category || 'General'}</p>
+                          <span className="text-zinc-700 text-[8px]">•</span>
+                          <p className="text-[10px] text-zinc-500">{new Date(p.createdAt || p.uploadedAt).toLocaleDateString()}</p>
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="p-2 text-zinc-400 hover:text-white"><Edit size={16} /></button>
+                      <button 
+                        onClick={() => playPodcast(p)}
+                        className="bg-zinc-800 p-2 rounded-full hover:bg-zinc-700 text-green-500"
+                      >
+                        <Play size={14} fill="currentColor" />
+                      </button>
                       <button onClick={() => deletePodcast(p._id)} className="p-2 text-zinc-400 hover:text-red-500"><Trash2 size={16} /></button>
                     </div>
                   </div>

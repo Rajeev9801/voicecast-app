@@ -71,14 +71,23 @@ const Sidebar = () => {
               />
             ))}
             
-            {(user?.role === 'podcaster' || user?.role === 'admin') && (
-              <SidebarItem 
-                to="/creator-dashboard"
-                icon={<ListMusic size={24} />}
-                label="Creator Panel"
-                active={isActive('/creator-dashboard')}
-                onClick={() => navigate('/creator-dashboard')}
-              />
+            {(user?.role === 'artist' || user?.role === 'admin') && (
+              <>
+                <SidebarItem 
+                  to="/creator-panel"
+                  icon={<ListMusic size={24} />}
+                  label="Creator Panel"
+                  active={isActive('/creator-panel')}
+                  onClick={() => navigate('/creator-panel')}
+                />
+                <SidebarItem 
+                  to="/add-podcast"
+                  icon={<PlusSquare size={24} />}
+                  label="Add Podcast"
+                  active={isActive('/add-podcast')}
+                  onClick={() => navigate('/add-podcast')}
+                />
+              </>
             )}
           </div>
 

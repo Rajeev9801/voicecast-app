@@ -21,12 +21,22 @@ import Settings from './pages/Settings';
 import LikedSongs from './pages/LikedSongs';
 import CreatePlaylist from './pages/CreatePlaylist';
 import PodcasterDashboard from './pages/PodcasterDashboard';
-import AdminLogin from './pages/Admin/AdminLogin';
+import AddPodcast from './pages/AddPodcast';
+import AdminLoginOriginal from './pages/Admin/AdminLogin';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminPodcasts from './pages/Admin/AdminPodcasts';
 import AdminRecordings from './pages/Admin/AdminRecordings';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminRoute from './routes/AdminRoute';
+
+// New Stylized Login Pages
+import UserLogin from './pages/Auth/UserLogin';
+import ArtistLogin from './pages/Auth/ArtistLogin';
+import AdminLogin from './pages/Auth/AdminLogin';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyOTP from './pages/VerifyOTP';
+import VerifyResetOTP from './pages/VerifyResetOTP';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -61,15 +71,6 @@ export default function App() {
 
   const [trendingPodcasts, setTrendingPodcasts] = useState([]);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-
-  useEffect(() => {
-    // Clear old auth data on startup
-    localStorage.removeItem('token');
-    localStorage.removeItem('voicecast_user');
-    localStorage.removeItem('user');
-    sessionStorage.clear();
-    console.log("🧹 [APP] Cleared stale session data on startup");
-  }, []);
 
   const diagnostics = useVoiceDiagnostics();
 
@@ -118,10 +119,11 @@ export default function App() {
               <Route path="/dashboard" element={user ? <UserDashboard /> : <Navigate to="/login" />} />
               <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
               <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
-              <Route path="/creator-dashboard" element={(user?.role === 'podcaster' || user?.role === 'admin') ? <PodcasterDashboard /> : <Navigate to="/login" />} />
+              <Route path="/creator-panel" element={(user?.role === 'artist' || user?.role === 'admin') ? <PodcasterDashboard /> : <Navigate to="/login" />} />
+              <Route path="/add-podcast" element={(user?.role === 'artist' || user?.role === 'admin') ? <AddPodcast /> : <AddPodcast />} />
               
               {/* Admin Infrastructure */}
-              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/login" element={<AdminLoginOriginal />} />
               <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/podcasts" element={<AdminRoute><AdminPodcasts /></AdminRoute>} />
@@ -129,13 +131,22 @@ export default function App() {
               <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
               <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
               
-              <Route path="/login" element={<Login />} />
+              <Route path="/login/user" element={<UserLogin />} />
+              <Route path="/login/artist" element={<ArtistLogin />} />
+              <Route path="/login/admin" element={<AdminLogin />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-otp" element={<VerifyOTP />} />
+              <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              
+              <Route path="/login" element={<Navigate to="/login/user" replace />} />
               <Route path="/register" element={<Register />} />
               
               {/* Redirects */}
               <Route path="/recording" element={<Navigate to="/record" />} />
               <Route path="/user-dashboard" element={<Navigate to="/dashboard" />} />
-              <Route path="/podcaster" element={<Navigate to="/creator-dashboard" />} />
+              <Route path="/artist" element={<Navigate to="/creator-panel" />} />
+              <Route path="/creator-dashboard" element={<Navigate to="/creator-panel" />} />
               <Route path="/admin-dashboard" element={<Navigate to="/admin" />} />
             </Routes>
           </ErrorBoundary>

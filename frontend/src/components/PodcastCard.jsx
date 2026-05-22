@@ -19,8 +19,16 @@ const PodcastCard = ({ podcast, onSelect, isCurrent }) => {
   const fallbackIndex = podcast.title ? podcast.title.length % fallbackImages.length : 0;
   
   // Use provided image if valid, otherwise fallback
-  const imgSource = (podcast.imageUrl || podcast.image || podcast.cover) && !(podcast.imageUrl || podcast.image || podcast.cover).includes("undefined")
-    ? (podcast.imageUrl || podcast.image || podcast.cover) 
+  let rawSource = podcast.thumbnail || podcast.imageUrl || podcast.image || podcast.cover;
+  
+  // Format URL if relative
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  if (rawSource && rawSource.startsWith('/uploads/')) {
+    rawSource = `${API_URL}${rawSource}`;
+  }
+
+  const imgSource = rawSource && !rawSource.includes("undefined")
+    ? rawSource 
     : fallbackImages[fallbackIndex];
 
   return (
@@ -62,7 +70,7 @@ const PodcastCard = ({ podcast, onSelect, isCurrent }) => {
           {podcast?.title || 'Untitled Podcast'}
         </h3>
         <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] truncate">
-          {podcast?.author || 'VoiceCast Artist'}
+          {podcast?.genre || podcast?.category || 'General'} • {podcast?.author || 'VoiceCast Artist'}
         </p>
       </div>
     </motion.div>

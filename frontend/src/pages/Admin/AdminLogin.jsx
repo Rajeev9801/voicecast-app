@@ -70,10 +70,16 @@ export default function AdminLogin() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@voicecast.io"
+                placeholder="rajeevkumar9801456p@gmail.com"
                 className="w-full bg-zinc-800/50 border border-zinc-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
               />
             </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
+              First time setup? Use the <span className="text-red-500 underline cursor-pointer" onClick={() => navigate('/login/admin')}>OTP initialization flow</span>
+            </p>
           </div>
 
           <div className="space-y-2">

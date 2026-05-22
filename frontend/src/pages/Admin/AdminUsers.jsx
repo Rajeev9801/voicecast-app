@@ -3,7 +3,7 @@ import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { Users, Trash2, Search, Filter, ShieldAlert } from 'lucide-react';
+import { Users, Trash2, Search, Filter, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
@@ -89,8 +89,8 @@ export default function AdminUsers() {
           >
             <option value="all">All Roles</option>
             <option value="admin">Admins</option>
-            <option value="podcaster">Creators</option>
-            <option value="user">Listeners</option>
+            <option value="artist">Artists</option>
+            <option value="listener">Listeners</option>
           </select>
         </div>
       </div>
@@ -105,6 +105,7 @@ export default function AdminUsers() {
             <thead>
               <tr className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-zinc-800 bg-black/20">
                 <th className="px-8 py-6">Node Identity</th>
+                <th className="px-8 py-6">Status</th>
                 <th className="px-8 py-6">Role Elevation</th>
                 <th className="px-8 py-6">Registration Date</th>
                 <th className="px-8 py-6 text-right">System Access</th>
@@ -125,18 +126,32 @@ export default function AdminUsers() {
                     </div>
                   </td>
                   <td className="px-8 py-6">
+                    {u.isVerified ? (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-[9px] font-black uppercase tracking-widest">
+                        <CheckCircle2 size={10} />
+                        Verified
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[9px] font-black uppercase tracking-widest">
+                        <XCircle size={10} />
+                        Unverified
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-8 py-6">
                     <select 
                       value={u.role}
                       onChange={(e) => handleChangeRole(u._id, e.target.value)}
                       className={`inline-block px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-zinc-800 border border-zinc-700 outline-none cursor-pointer hover:border-zinc-500 transition-all ${
                         u.role === 'admin' ? 'text-red-500' : 
-                        u.role === 'podcaster' ? 'text-blue-500' : 'text-zinc-400'
+                        u.role === 'artist' ? 'text-blue-500' : 'text-zinc-400'
                       }`}
                     >
-                      <option value="user">Listener</option>
-                      <option value="podcaster">Creator</option>
+                      <option value="listener">Listener</option>
+                      <option value="artist">Artist</option>
                       <option value="admin">Admin</option>
                     </select>
+
                   </td>
                   <td className="px-8 py-6 text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
                     {u.createdAt && u.createdAt !== 'INVALID DATE' 
