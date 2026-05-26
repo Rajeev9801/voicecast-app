@@ -57,9 +57,12 @@ export default function Search() {
   }, [searchQuery]);
 
   // MANDATORY: Non-destructive filtering + merging API results
+  const podcastsArray = Array.isArray(podcasts) ? podcasts : [];
+  const apiResultsArray = Array.isArray(apiResults) ? apiResults : [];
+
   const localMatches = searchQuery.trim() === ""
-    ? podcasts
-    : podcasts.filter(p => 
+    ? podcastsArray
+    : podcastsArray.filter(p => 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -68,7 +71,7 @@ export default function Search() {
   // Combined and deduplicate
   const combinedMap = new Map();
   localMatches.forEach(p => combinedMap.set(p.id || p._id, p));
-  apiResults.forEach(p => combinedMap.set(p.id || p._id, p));
+  apiResultsArray.forEach(p => combinedMap.set(p.id || p._id, p));
   const filteredPodcasts = Array.from(combinedMap.values()).filter(p => p.audio || p.audioUrl);
 
   const renderPodcastGrid = (podcastsToRender) => (

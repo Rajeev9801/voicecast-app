@@ -11,7 +11,8 @@ export const podcastService = {
   getRecommended: async () => {
     try {
       const { data } = await api.get('/api/podcasts');
-      return data.podcasts || data;
+      const podcasts = data.success ? data.data : (data.podcasts || data);
+      return Array.isArray(podcasts) ? podcasts : [];
     } catch (err) {
       console.error('Failed to fetch podcasts', err);
       return [];
@@ -21,7 +22,8 @@ export const podcastService = {
   getTrending: async () => {
     try {
       const { data } = await api.get('/api/podcasts/trending');
-      return data.podcasts || data;
+      const trending = data.success ? data.data : (data.podcasts || data);
+      return Array.isArray(trending) ? trending : [];
     } catch (err) {
       console.error('Failed to fetch trending', err);
       return [];
@@ -29,19 +31,31 @@ export const podcastService = {
   },
 
   getMyPodcasts: async () => {
-    const { data } = await api.get('/api/podcasts/my');
-    return data;
+    try {
+      const { data } = await api.get('/api/podcasts/my');
+      const my = data.success ? data.data : data;
+      return Array.isArray(my) ? my : [];
+    } catch (err) {
+      console.error('Failed to fetch my podcasts', err);
+      return [];
+    }
   },
 
   getById: async (id) => {
-    const { data } = await api.get(`/api/podcasts/${id}`);
-    return data;
+    try {
+      const { data } = await api.get(`/api/podcasts/${id}`);
+      return data.success ? data.data : data;
+    } catch (err) {
+      console.error('Failed to fetch podcast by id', err);
+      return null;
+    }
   },
 
   search: async (query) => {
     try {
       const { data } = await api.get(`/api/podcasts/search/${query}`);
-      return data;
+      const results = data.success ? data.data : data;
+      return Array.isArray(results) ? results : [];
     } catch (err) {
       console.error('Search failed', err);
       return [];
@@ -57,7 +71,8 @@ export const podcastService = {
   searchSpotify: async (query) => {
     try {
       const { data } = await api.get(`/api/podcasts/spotify/search?query=${query}`);
-      return data;
+      const results = data.success ? data.data : data;
+      return Array.isArray(results) ? results : podcastService.search(query);
     } catch (err) {
       return podcastService.search(query);
     }
@@ -66,19 +81,32 @@ export const podcastService = {
   searchGlobal: async (query) => {
     try {
       const { data } = await api.get(`/api/podcasts/global/search?query=${query}`);
-      return data;
+      const results = data.success ? data.data : data;
+      return Array.isArray(results) ? results : podcastService.search(query);
     } catch (err) {
       return podcastService.search(query);
     }
   },
 
   getFeedEpisodes: async (feedUrl) => {
-    const { data } = await api.get(`/api/podcasts/global/episodes?feedUrl=${feedUrl}`);
-    return data;
+    try {
+      const { data } = await api.get(`/api/podcasts/global/episodes?feedUrl=${feedUrl}`);
+      const results = data.success ? data.data : data;
+      return Array.isArray(results) ? results : [];
+    } catch (err) {
+      console.error('Failed to fetch feed episodes', err);
+      return [];
+    }
   },
 
   getEpisodes: async (podcastId) => {
-    const { data } = await api.get(`/api/podcasts/${podcastId}/episodes`);
-    return data;
+    try {
+      const { data } = await api.get(`/api/podcasts/${podcastId}/episodes`);
+      const results = data.success ? data.data : data;
+      return Array.isArray(results) ? results : [];
+    } catch (err) {
+      console.error('Failed to fetch episodes', err);
+      return [];
+    }
   },
 };

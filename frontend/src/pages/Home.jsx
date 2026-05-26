@@ -20,16 +20,19 @@ export default function Home({ podcasts: initialPodcasts, trendingPodcasts }) {
   console.log("🏠 [HOME] Received trending:", trendingPodcasts?.length || 0);
 
   // MANDATORY: Non-destructive filtering
+  const recommendedArray = Array.isArray(initialPodcasts) ? initialPodcasts : [];
+  const trendingArray = Array.isArray(trendingPodcasts) ? trendingPodcasts : [];
+
   const filteredRecommended = (searchQuery.trim() === ""
-    ? initialPodcasts || []
-    : (initialPodcasts || []).filter(p => 
+    ? recommendedArray
+    : recommendedArray.filter(p => 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.author?.toLowerCase().includes(searchQuery.toLowerCase())
       )).filter(p => p.audio || p.audioUrl);
 
   const filteredTrending = (searchQuery.trim() === ""
-    ? trendingPodcasts || []
-    : (trendingPodcasts || []).filter(p => 
+    ? trendingArray
+    : trendingArray.filter(p => 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.author?.toLowerCase().includes(searchQuery.toLowerCase())
       )).filter(p => p.audio || p.audioUrl);
