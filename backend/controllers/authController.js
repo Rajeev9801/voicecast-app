@@ -15,7 +15,7 @@ export const registerUser = async (req, res) => {
   try {
     const { name, password, role } = req.body;
     const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
-    const isBypass = process.env.BYPASS_OTP === 'true';
+    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
     
     console.log("📝 [AUTH-REGISTER] Request:", { name, email, role, isBypass });
 
@@ -110,7 +110,7 @@ export const registerUser = async (req, res) => {
 export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    const isBypass = process.env.BYPASS_OTP === 'true';
+    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
     console.log(`🔍 [AUTH-VERIFY] Attempt for: ${email} (OTP: ${otp}, Bypass: ${isBypass})`);
 
     let user = await User.findOne({ email: email.toLowerCase().trim() });
@@ -269,7 +269,7 @@ export const authUser = async (req, res) => {
 export const sendOTP = async (req, res) => {
   try {
     const { email, purpose } = req.body;
-    const isBypass = process.env.BYPASS_OTP === 'true';
+    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
     console.log(`📝 [AUTH-SEND-OTP] Request for: ${email} (Purpose: ${purpose}, Bypass: ${isBypass})`);
 
     let user = await User.findOne({ email: email.toLowerCase().trim() });
@@ -314,7 +314,7 @@ export const sendOTP = async (req, res) => {
 export const forgotPasswordUser = async (req, res) => {
   try {
     const { email } = req.body;
-    const isBypass = process.env.BYPASS_OTP === 'true';
+    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
     console.log(`📝 [AUTH-FORGOT-PASSWORD] Request for user: ${email} (Bypass: ${isBypass})`);
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
@@ -350,7 +350,7 @@ export const forgotPasswordUser = async (req, res) => {
 export const forgotPasswordArtist = async (req, res) => {
   try {
     const { email } = req.body;
-    const isBypass = process.env.BYPASS_OTP === 'true';
+    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
     console.log(`📝 [AUTH-FORGOT-PASSWORD] Request for artist: ${email} (Bypass: ${isBypass})`);
 
     const artist = await Artist.findOne({ email: email.toLowerCase().trim() });
@@ -469,7 +469,7 @@ export const requestAdminOTP = async (req, res) => {
     user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    const isBypass = process.env.BYPASS_OTP === 'true';
+    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
     if (isBypass) {
       console.log("⚠️ [ADMIN-BYPASS] Mocking Admin OTP send success.");
       return res.json({ success: true, message: 'Admin Access Code sent (Bypass Active)', bypass: true });
@@ -497,7 +497,7 @@ export const verifyAdminOTP = async (req, res) => {
   try {
     const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
     const { otp } = req.body;
-    const isBypass = process.env.BYPASS_OTP === 'true';
+    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
     const ADMIN_EMAIL = "rajeevkumar9801456p@gmail.com";
 
     console.log(`🔍 [ADMIN-VERIFY] Attempt for: ${email} (OTP: ${otp}, Bypass: ${isBypass})`);
