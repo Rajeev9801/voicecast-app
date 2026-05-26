@@ -14,35 +14,22 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
-const MAIL_PROVIDER = process.env.MAIL_PROVIDER || 'gmail';
 
 console.log("-----------------------------------------");
-console.log("📧 [MAIL-INIT] Initializing Nodemailer Service (Railway IPv4 Patch)");
+console.log("📧 [MAIL-INIT] Initializing Nodemailer Service (Gmail Service Patch)");
+console.log("📧 [MAIL-MODE] Gmail service mode enabled");
 console.log("📧 [MAIL-NET] IPv4 enforced");
-console.log("📧 [MAIL-INIT] Provider:", MAIL_PROVIDER);
 console.log("📧 [MAIL-INIT] User:", EMAIL_USER);
 console.log("-----------------------------------------");
 
-// Create Transporter with strict IPv4 forcing
+// Create Transporter using Gmail Service Mode
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  requireTLS: true,
+  service: 'gmail',
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
   },
-  // Custom DNS lookup to strictly avoid IPv6
-  lookup: (hostname, options, callback) => {
-    return dns.lookup(hostname, { family: 4 }, callback);
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  family: 4 // Still force IPv4
 });
 
 // Non-blocking connection check
@@ -57,9 +44,9 @@ export const verifyMailConnection = async () => {
     // Non-blocking verify
     transporter.verify((error, success) => {
       if (error) {
-        console.error("❌ [MAIL-VERIFY] Background Check FAILED (IPv4):", error.message);
+        console.error("❌ [MAIL-VERIFY] Background Check FAILED (Service Mode):", error.message);
       } else {
-        console.log("✅ [MAIL-VERIFY] READY - Gmail SMTP Connection Verified (Strict IPv4)");
+        console.log("✅ [MAIL-VERIFY] READY - Gmail Service Connection Verified");
       }
     });
     
@@ -72,9 +59,7 @@ export const verifyMailConnection = async () => {
 
 export const getMailDiagnostics = () => {
   return {
-    provider: MAIL_PROVIDER,
-    host: 'smtp.gmail.com',
-    port: 465,
+    provider: 'gmail_service',
     ipv4_enforced: true,
     user_set: !!EMAIL_USER,
     pass_set: !!EMAIL_PASS,
@@ -116,7 +101,7 @@ export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
   };
 
   try {
-    console.log(`📧 [MAIL-SEND] Dispatching to: ${email} via STRICT IPv4...`);
+    console.log(`📧 [MAIL-SEND] Dispatching to: ${email} via Gmail Service...`);
     const info = await transporter.sendMail(mailOptions);
     console.log("✅ [MAIL-SUCCESS] Sent! MessageId:", info.messageId);
     return { success: true, messageId: info.messageId };
