@@ -143,8 +143,21 @@ const AdminLogin = () => {
       console.log("🔍 [ADMIN-DEBUG] STATUS:", response.status);
 
       if (response.status === 200 || response.data.success) {
-        toast.success('OTP Verified. Please set your secure password.');
-        setStep(3);
+        // Check for direct login token
+        if (response.data.token && response.data.user) {
+          localStorage.setItem("token", response.data.token);
+          localStorage.setItem("voicecast_user", JSON.stringify(response.data.user));
+          localStorage.setItem("role", "admin");
+
+          toast.success("Admin Access Verified");
+          if (setUser) setUser(response.data.user);
+          
+          console.log("✅ [ADMIN-DEBUG] OTP VERIFY SUCCESS. NAVIGATING...");
+          navigate("/admin/dashboard");
+        } else {
+          toast.success('OTP Verified. Please set your secure password.');
+          setStep(3);
+        }
       } else {
         console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: Verify OTP failed status");
         toast.error('Invalid OTP');
