@@ -33,14 +33,12 @@ router.get('/diagnostic', async (req, res) => {
     const resendDiag = getResendDiagnostics();
     res.json({
       success: true,
-      resend_key_exists: resendDiag.key_exists,
-      resend_key_raw_length: resendDiag.key_raw_length,
-      resend_key_sanitized_length: resendDiag.key_sanitized_length,
-      resend_key_prefix: resendDiag.key_prefix,
+      resend_key_exists: resendDiag.raw_key_exists,
+      resend_key_length: resendDiag.raw_key_length,
+      resend_key_prefix: resendDiag.raw_key_prefix,
       resend_initialized: resendDiag.initialized,
       mongodb_connected: mongoose.connection.readyState === 1,
       jwt_exists: !!process.env.JWT_SECRET,
-      bypass_otp: resendDiag.bypass_active,
       node_env: process.env.NODE_ENV
     });
   } catch (err) {
