@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const userSchema = new mongoose.Schema({
+const artistSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
@@ -17,17 +17,12 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin', 'podcaster'],
-    default: 'user'
+    default: 'artist'
   },
   avatar: {
     type: String,
     default: ''
   },
-  likedSongs: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Podcast'
-  }],
   recordings: [{
     title: String,
     url: String,
@@ -40,12 +35,9 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Podcast'
   }],
-  playlists: [{
-    name: String,
-    podcasts: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Podcast'
-    }]
+  likedSongs: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Podcast'
   }],
   history: [{
     podcast: {
@@ -54,6 +46,7 @@ const userSchema = new mongoose.Schema({
     },
     listenedAt: Date
   }],
+  bio: String,
   resetPasswordOTP: String,
   resetPasswordOTPExpire: Date,
   isVerified: {
@@ -71,27 +64,22 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function() {
-  console.log("💾 [USER-MODEL] Pre-save hook started for:", this.email);
+artistSchema.pre('save', async function() {
   if (!this.isModified('password')) {
-    console.log("💾 [USER-MODEL] Password not modified, skipping hash");
     return;
   }
   try {
-    console.log("💾 [USER-MODEL] Hashing password...");
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    console.log("💾 [USER-MODEL] Password hashed successfully");
   } catch (err) {
-    console.error("💾 [USER-MODEL] Hashing error:", err);
     throw err;
   }
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function(enteredPassword) {
+artistSchema.methods.comparePassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
-export default User;
+const Artist = mongoose.model('Artist', artistSchema);
+export default Artist;

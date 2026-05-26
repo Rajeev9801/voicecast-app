@@ -2,19 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { userService } from '../services/userService';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { Users, Mic, Radio, ShieldAlert, BarChart3, Activity, TrendingUp, UserPlus, Clock, Play, Server, Zap } from 'lucide-react';
+import { Users, Mic, Radio, ShieldAlert, BarChart3, Activity, TrendingUp, UserPlus, Clock, Play, Server, Zap, Headphones } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import AdminAnalytics from '../components/AdminAnalytics';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [analytics, setAnalytics] = useState({ 
+  const [stats, setStats] = useState({ 
     totalUsers: 0, 
+    totalArtists: 0,
     totalPodcasts: 0, 
-    totalRecordings: 0,
-    totalCreators: 0,
-    totalPlays: 0
+    recentUsers: []
   });
-  const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,19 +23,15 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [analyticsData, usersData] = await Promise.all([
-        userService.getAnalytics(),
-        userService.getAllUsersAdmin()
-      ]);
+      const statsData = await userService.getStatsAdmin();
+      console.log("📊 [ADMIN-DASHBOARD] Stats data received:", statsData);
       
-      setAnalytics(analyticsData || { 
-        totalUsers: 0, 
-        totalPodcasts: 0, 
-        totalRecordings: 0,
-        totalCreators: 0,
-        totalPlays: 0
+      setStats({
+        totalUsers: statsData.totalUsers || 0,
+        totalArtists: statsData.totalArtists || 0,
+        totalPodcasts: statsData.totalPodcasts || 0,
+        recentUsers: statsData.recentUsers || []
       });
-      setRecentUsers(Array.isArray(usersData) ? usersData.slice(0, 5) : []);
     } catch (err) {
       console.error('Dashboard data sync error:', err);
     } finally {
@@ -77,12 +72,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* STATS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-        <StatCard icon={<Users />} title="Total Identities" value={analytics.totalUsers} color="blue" subtitle="Registered Nodes" />
-        <StatCard icon={<Play />} title="Total Plays" value={analytics.totalPlays || 0} color="green" subtitle="Consumption" />
-        <StatCard icon={<Radio />} title="Broadcast Assets" value={analytics.totalPodcasts} color="purple" subtitle="Live Streams" />
-        <StatCard icon={<UserPlus />} title="Active Creators" value={analytics.totalCreators || 0} color="yellow" subtitle="Verified Nodes" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <StatCard icon={<Users />} title="Total Users" value={stats.totalUsers} color="blue" subtitle="Registered Listeners" />
+        <StatCard icon={<Headphones />} title="Total Artists" value={stats.totalArtists} color="green" subtitle="Content Creators" />
+        <StatCard icon={<Radio />} title="Total Podcasts" value={stats.totalPodcasts} color="purple" subtitle="Broadcast Assets" />
       </div>
+
+      {/* ANALYTICS SECTION */}
+      <AdminAnalytics />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
         {/* RECENT ACTIVITY TABLE */}
@@ -108,7 +105,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/30">
-                {recentUsers.map(u => (
+                {stats.recentUsers.map(u => (
                   <tr key={u._id} className="hover:bg-white/[0.03] transition-all group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
@@ -165,32 +162,6 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
-  );
-}
-
-function StatCard({ icon, title, value, color, subtitle }) {
-  const colorMap = {
-    blue: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-    green: 'text-green-500 bg-green-500/10 border-green-500/20',
-    purple: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
-    yellow: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20'
-  };
-
-  return (
-    <motion.div 
-      whileHover={{ y: -5, scale: 1.02 }}
-      className="bg-zinc-900/60 p-8 rounded-[2.5rem] border border-zinc-800 relative group hover:border-zinc-700 transition-all duration-300 shadow-xl overflow-hidden"
-    >
-      <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all duration-700">
-         {React.cloneElement(icon, { size: 120 })}
-      </div>
-      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border ${colorMap[color]} shadow-inner`}>
-        {React.cloneElement(icon, { size: 32 })}
-      </div>
-      <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{title}</h3>
-      <p className="text-5xl font-black mt-2 tracking-tighter text-white">{value}</p>
-      <div className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-2">{subtitle}</div>
-    </motion.div>
   );
 }
 

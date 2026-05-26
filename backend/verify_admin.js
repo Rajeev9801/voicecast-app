@@ -9,7 +9,7 @@ async function verifyAdmin() {
     await mongoose.connect(mongoURI);
     console.log('Connected to MongoDB');
 
-    const adminEmail = 'admin@voicecast.com';
+    const adminEmail = 'rajeevkumar9801456p@gmail.com';
     let admin = await User.findOne({ email: adminEmail });
 
     if (!admin) {

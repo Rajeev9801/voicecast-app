@@ -22,7 +22,6 @@ import LikedSongs from './pages/LikedSongs';
 import CreatePlaylist from './pages/CreatePlaylist';
 import PodcasterDashboard from './pages/PodcasterDashboard';
 import AddPodcast from './pages/AddPodcast';
-import AdminLoginOriginal from './pages/Admin/AdminLogin';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminPodcasts from './pages/Admin/AdminPodcasts';
 import AdminRecordings from './pages/Admin/AdminRecordings';
@@ -37,6 +36,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerifyOTP from './pages/VerifyOTP';
 import VerifyResetOTP from './pages/VerifyResetOTP';
+import ArtistForgotPassword from './pages/Auth/ArtistForgotPassword';
+import ArtistVerifyResetOTP from './pages/Auth/ArtistVerifyResetOTP';
+import ArtistResetPassword from './pages/Auth/ArtistResetPassword';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -66,7 +68,9 @@ export default function App() {
     voiceError, 
     startListening, 
     stopListening,
-    isSupported
+    isSupported,
+    volume,
+    setVolume
   } = useVoice();
 
   const [trendingPodcasts, setTrendingPodcasts] = useState([]);
@@ -123,7 +127,7 @@ export default function App() {
               <Route path="/add-podcast" element={(user?.role === 'artist' || user?.role === 'admin') ? <AddPodcast /> : <AddPodcast />} />
               
               {/* Admin Infrastructure */}
-              <Route path="/admin/login" element={<AdminLoginOriginal />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/podcasts" element={<AdminRoute><AdminPodcasts /></AdminRoute>} />
@@ -134,6 +138,9 @@ export default function App() {
               <Route path="/login/user" element={<UserLogin />} />
               <Route path="/login/artist" element={<ArtistLogin />} />
               <Route path="/login/admin" element={<AdminLogin />} />
+              <Route path="/artist/forgot-password" element={<ArtistForgotPassword />} />
+              <Route path="/artist/verify-reset-otp" element={<ArtistVerifyResetOTP />} />
+              <Route path="/artist/reset-password" element={<ArtistResetPassword />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/verify-otp" element={<VerifyOTP />} />
               <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
@@ -160,6 +167,8 @@ export default function App() {
         onNext={handleNext}
         onPrevious={handlePrev}
         audioRef={audioRef}
+        volume={volume}
+        setVolume={setVolume}
       />
 
       <FloatingMic

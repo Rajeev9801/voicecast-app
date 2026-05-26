@@ -23,13 +23,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.warn("⚠️ [API] 401 Unauthorized - Purging session...");
-      localStorage.removeItem('token');
-      localStorage.removeItem('voicecast_user');
-      sessionStorage.clear();
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
+      console.warn("⚠️ [API] 401 Unauthorized for URL:", error.config.url);
+      // Removed automatic purge to prevent loops
     }
     return Promise.reject(error);
   }

@@ -4,6 +4,7 @@ import { podcastService } from '../services/podcastService';
 import Navbar from '../components/Navbar';
 import PodcastCard from '../components/PodcastCard';
 import { motion } from 'framer-motion';
+import { filterValidPodcasts } from '../utils/audioValidator';
 
 export default function Search() {
   const { 
@@ -40,6 +41,7 @@ export default function Search() {
         try {
           const results = await podcastService.search(searchQuery);
           setApiResults(results || []);
+          console.log(`🔍 [SEARCH] API returned ${results?.length || 0} results for "${searchQuery}"`);
         } catch (err) {
           console.error("Search API failed", err);
         } finally {
@@ -63,11 +65,11 @@ export default function Search() {
         p.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-  // Combine and deduplicate
+  // Combined and deduplicate
   const combinedMap = new Map();
   localMatches.forEach(p => combinedMap.set(p.id || p._id, p));
   apiResults.forEach(p => combinedMap.set(p.id || p._id, p));
-  const filteredPodcasts = Array.from(combinedMap.values());
+  const filteredPodcasts = Array.from(combinedMap.values()).filter(p => p.audio || p.audioUrl);
 
   const renderPodcastGrid = (podcastsToRender) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">

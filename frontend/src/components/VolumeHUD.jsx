@@ -11,7 +11,7 @@ export default function VolumeHUD() {
   useEffect(() => {
     const handleVolumeChange = (e) => {
       const { volume: newVol, muted } = e.detail;
-      setVolume(Math.round(newVol * 100));
+      setVolume(Math.round(newVol * 50));
       setIsMuted(muted);
       setIsVisible(true);
       
@@ -28,8 +28,8 @@ export default function VolumeHUD() {
 
   const getIcon = () => {
     if (isMuted || volume === 0) return <VolumeX size={32} className="text-red-500" />;
-    if (volume < 30) return <Volume size={32} className="text-green-500" />;
-    if (volume < 70) return <Volume1 size={32} className="text-green-500" />;
+    if (volume < 20) return <Volume size={32} className="text-green-500" />;
+    if (volume < 60) return <Volume1 size={32} className="text-green-500" />;
     return <Volume2 size={32} className="text-green-500" />;
   };
 

@@ -55,20 +55,23 @@ export const getEpisodesFromFeed = async (feedUrl) => {
     const channel = result.rss.channel[0];
     const items = channel.item || [];
 
-    return items.slice(0, 10).map((item, index) => {
-      // Find the audio enclosure
-      const enclosure = item.enclosure ? item.enclosure[0].$ : null;
-      const audioUrl = enclosure ? enclosure.url : '';
+    return items
+      .map((item, index) => {
+        // Find the audio enclosure
+        const enclosure = item.enclosure ? item.enclosure[0].$ : null;
+        const audioUrl = enclosure ? enclosure.url : '';
 
-      return {
-        id: `ep-${index}-${Date.now()}`,
-        title: item.title ? item.title[0] : `Episode ${index + 1}`,
-        description: item.description ? item.description[0] : '',
-        audio: audioUrl,
-        audioUrl: audioUrl,
-        pub_date_ms: item.pubDate ? new Date(item.pubDate[0]).getTime() : Date.now(),
-      };
-    });
+        return {
+          id: `ep-${index}-${Date.now()}`,
+          title: item.title ? item.title[0] : `Episode ${index + 1}`,
+          description: item.description ? item.description[0] : '',
+          audio: audioUrl,
+          audioUrl: audioUrl,
+          pub_date_ms: item.pubDate ? new Date(item.pubDate[0]).getTime() : Date.now(),
+        };
+      })
+      .filter(ep => ep.audioUrl && ep.audioUrl.trim() !== '')
+      .slice(0, 10);
   } catch (err) {
     console.error('RSS Feed Parse Error:', err);
     return [];

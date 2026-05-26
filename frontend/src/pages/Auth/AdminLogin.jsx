@@ -16,31 +16,112 @@ const AdminLogin = () => {
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleStandardLogin = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    if (loading) return; 
+    
     setLoading(true);
     try {
-      await login(email, password, 'admin');
-      toast.success('Admin authentication successful');
-      navigate('/admin/dashboard');
+      console.log("🔐 [ADMIN-DEBUG] START: handleStandardLogin");
+      console.log("🔐 [ADMIN-DEBUG] EMAIL:", email);
+      
+      const response = await api.post('/api/auth/login/admin', { email, password });
+      
+      console.log("🔐 [ADMIN-DEBUG] RAW RESPONSE:", response);
+      console.log("🔐 [ADMIN-DEBUG] STATUS CODE:", response.status);
+      console.log("🔐 [ADMIN-DEBUG] HEADERS:", response.headers);
+
+      // Check if response is HTML (Common error where proxy returns 404/500 as HTML)
+      const contentType = response.headers['content-type'];
+      if (contentType && contentType.includes('text/html')) {
+        console.error("🔥 [ADMIN-DEBUG] CRITICAL: Server returned HTML instead of JSON. Check backend logs.");
+        console.log("🔥 [ADMIN-DEBUG] HTML BODY PREVIEW:", String(response.data).substring(0, 200));
+        toast.error("Server Error: Invalid Response Format");
+        return;
+      }
+
+      console.log("🔐 [ADMIN-DEBUG] DATA OBJECT:", response.data);
+
+      if (response.status === 200) {
+        if (!response.data.token || !response.data.user) {
+          console.error("🔥 [ADMIN-DEBUG] CRITICAL: 200 OK but MISSING TOKEN/USER in data", response.data);
+          toast.error("Internal Auth Error: Missing Credentials");
+          return;
+        }
+
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("voicecast_user", JSON.stringify(response.data.user));
+        localStorage.setItem("role", "admin");
+
+        toast.success("Admin Login Successful");
+        if (setUser) setUser(response.data.user);
+        
+        console.log("✅ [ADMIN-DEBUG] LOGIN COMPLETE. NAVIGATING...");
+        navigate("/admin/dashboard");
+      } else {
+        console.log("❌ [ADMIN-DEBUG] DENIAL: Non-200 status detected inside try block", response.status);
+        toast.error("Access Denied");
+      }
     } catch (err) {
-      toast.error(typeof err === 'string' ? err : 'Authentication failed. Use Setup mode if first time.');
+      console.log("🔥 [ADMIN-DEBUG] CATCH BLOCK HIT");
+      console.log("🔥 [ADMIN-DEBUG] ERROR MESSAGE:", err.message);
+      
+      if (err.response) {
+        console.log("🔥 [ADMIN-DEBUG] ERROR STATUS:", err.response.status);
+        console.log("🔥 [ADMIN-DEBUG] ERROR DATA:", err.response.data);
+        
+        if (err.response.status === 403) {
+          console.log("❌ [ADMIN-DEBUG] DENIAL: 403 Forbidden - Likely email mismatch in backend");
+        } else if (err.response.status === 401) {
+          console.log("❌ [ADMIN-DEBUG] DENIAL: 401 Unauthorized - Invalid password");
+        }
+        
+        toast.error(err.response.data?.message || 'Access Denied');
+      } else if (err.request) {
+        console.log("🔥 [ADMIN-DEBUG] NO RESPONSE RECEIVED (Network Error)");
+        toast.error("Network Error: Backend Unreachable");
+      } else {
+        console.log("🔥 [ADMIN-DEBUG] UNKNOWN ERROR:", err.message);
+        toast.error("Access Denied");
+      }
     } finally {
       setLoading(false);
+      console.log("🔐 [ADMIN-DEBUG] END: handleStandardLogin");
     }
   };
 
   const handleRequestOTP = async () => {
-    if (!email) return toast.error('Please enter admin email');
+    if (!email) {
+      console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: No email provided");
+      return toast.error('Please enter admin email');
+    }
+    if (loading) return;
+
     setLoading(true);
     try {
-      const { data } = await api.post('/api/auth/admin/request-otp', { email });
-      toast.success(data.message);
-      setStep(2);
+      console.log("🛡️ [ADMIN-DEBUG] STEP: handleRequestOTP");
+      console.log("🛡️ [ADMIN-DEBUG] EMAIL:", email);
+      
+      const response = await api.post('/api/auth/admin/request-otp', { email });
+      
+      console.log("🛡️ [ADMIN-DEBUG] API RESPONSE:", response);
+      console.log("🛡️ [ADMIN-DEBUG] STATUS:", response.status);
+      console.log("🛡️ [ADMIN-DEBUG] DATA:", response.data);
+      
+      if (response.status === 200 || response.data.success) {
+        toast.success(response.data.message || 'OTP Sent Successfully');
+        setStep(2);
+      } else {
+        console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: OTP request failed status");
+        toast.error('Access Denied');
+      }
     } catch (err) {
+      console.log("🔥 [ADMIN-DEBUG] OTP ERROR OBJECT:", err);
+      console.log("🔥 [ADMIN-DEBUG] OTP ERROR RESPONSE:", err.response);
+      console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: OTP catch block");
       toast.error(err.response?.data?.message || 'Access Denied');
     } finally {
       setLoading(false);
@@ -49,12 +130,29 @@ const AdminLogin = () => {
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     try {
-      await api.post('/api/auth/verify-reset-otp', { email, otp });
-      toast.success('OTP Verified. Please set your secure password.');
-      setStep(3);
+      console.log("🔍 [ADMIN-DEBUG] STEP: handleVerifyOTP");
+      console.log("🔍 [ADMIN-DEBUG] PAYLOAD:", { email, otp });
+      
+      const response = await api.post('/api/auth/verify-reset-otp', { email, otp });
+      
+      console.log("🔍 [ADMIN-DEBUG] API RESPONSE:", response);
+      console.log("🔍 [ADMIN-DEBUG] STATUS:", response.status);
+
+      if (response.status === 200 || response.data.success) {
+        toast.success('OTP Verified. Please set your secure password.');
+        setStep(3);
+      } else {
+        console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: Verify OTP failed status");
+        toast.error('Invalid OTP');
+      }
     } catch (err) {
+      console.log("🔥 [ADMIN-DEBUG] VERIFY ERROR OBJECT:", err);
+      console.log("🔥 [ADMIN-DEBUG] VERIFY ERROR RESPONSE:", err.response);
+      console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: Verify catch block");
       toast.error(err.response?.data?.message || 'Invalid OTP');
     } finally {
       setLoading(false);
@@ -63,16 +161,35 @@ const AdminLogin = () => {
 
   const handleSetPassword = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) return toast.error('Passwords do not match');
+    if (password !== confirmPassword) {
+      console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: Password mismatch");
+      return toast.error('Passwords do not match');
+    }
+    if (loading) return;
     
     setLoading(true);
     try {
-      await api.post('/api/auth/admin/set-password', { email, otp, password });
-      toast.success('Secure password established. You can now login.');
-      setIsSetupMode(false);
-      setStep(1);
-      setPassword('');
+      console.log("💾 [ADMIN-DEBUG] STEP: handleSetPassword");
+      console.log("💾 [ADMIN-DEBUG] PAYLOAD:", { email, otp, password });
+      
+      const response = await api.post('/api/auth/admin/set-password', { email, otp, password });
+      
+      console.log("💾 [ADMIN-DEBUG] API RESPONSE:", response);
+      console.log("💾 [ADMIN-DEBUG] STATUS:", response.status);
+
+      if (response.status === 200 || response.data.success) {
+        toast.success('Secure password established. You can now login.');
+        setIsSetupMode(false);
+        setStep(1);
+        setPassword('');
+      } else {
+        console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: Set password failed status");
+        toast.error('Failed to set password');
+      }
     } catch (err) {
+      console.log("🔥 [ADMIN-DEBUG] SET PASSWORD ERROR OBJECT:", err);
+      console.log("🔥 [ADMIN-DEBUG] SET PASSWORD ERROR RESPONSE:", err.response);
+      console.log("❌ [ADMIN-DEBUG] DENIAL CONDITION HIT: Set password catch block");
       toast.error(err.response?.data?.message || 'Failed to set password');
     } finally {
       setLoading(false);
@@ -118,7 +235,7 @@ const AdminLogin = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
-                    placeholder="rajeevkumar9801456p@gmail.com"
+                    placeholder="rajeevkumar9801456p @AppData\Local\Microsoft\Edge\User Data\Default\Workspaces\Collaborators Photos\rajeevkumar766820@gmail.com.png"
                     required
                   />
                 </div>

@@ -87,6 +87,15 @@ const ArtistLogin = () => {
                 required
               />
             </div>
+            <div className="flex justify-end mt-1">
+              <button
+                type="button"
+                onClick={() => navigate('/artist/forgot-password')}
+                className="text-[10px] font-bold text-zinc-500 hover:text-green-500 uppercase tracking-widest transition-colors"
+              >
+                Forgot Password?
+              </button>
+            </div>
           </div>
 
           <div className="pt-2">

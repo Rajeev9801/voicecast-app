@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRecorder } from '../hooks/useRecorder';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { userService } from '../services/userService';
 import api from '../api';
 import { toast } from 'react-toastify';
 import { Mic, Square, Play, Pause, Trash2, Upload, Volume2 } from 'lucide-react';
@@ -124,6 +125,7 @@ export default function RecordingStudio() {
         return;
     }
 
+    if (isUploading) return; // Prevent duplicate publish calls
     setIsUploading(true);
 
     try {
@@ -131,35 +133,47 @@ export default function RecordingStudio() {
       formData.append("audio", audioBlob, "recording.webm");
       formData.append("title", finalTitle);
 
-      const response = await api.post('/api/recordings', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      console.log('🎙️ [RECORDING-DEBUG] Starting upload...');
+      const data = await userService.saveRecording(formData);
+      
+      console.log('🎙️ [RECORDING-DEBUG] SUCCESS DATA:', data);
 
-      // Also update local cache for UI continuity if needed
-      const newRecording = response.data.recording;
-      if (newRecording) {
-        const allRecordings = JSON.parse(localStorage.getItem('voicecast_recordings') || '[]');
-        allRecordings.push(newRecording);
-        localStorage.setItem('voicecast_recordings', JSON.stringify(allRecordings));
+      // Verify that we actually got a success message or data
+      if (data && (data.success || data.recording || data.message)) {
+        toast.success(data.message || 'Recording published successfully!');
         
-        const userData = JSON.parse(localStorage.getItem('voicecast_user') || '{}');
-        userData.recordings = [...(userData.recordings || []), newRecording];
-        localStorage.setItem('voicecast_user', JSON.stringify(userData));
-      }
+        // Also update local cache for UI continuity
+        const newRecording = data.recording;
+        if (newRecording) {
+          try {
+            const allRecordings = JSON.parse(localStorage.getItem('voicecast_recordings') || '[]');
+            allRecordings.push(newRecording);
+            localStorage.setItem('voicecast_recordings', JSON.stringify(allRecordings));
+            
+            const userData = JSON.parse(localStorage.getItem('voicecast_user') || '{}');
+            userData.recordings = [...(userData.recordings || []), newRecording];
+            localStorage.setItem('voicecast_user', JSON.stringify(userData));
+          } catch (storageErr) {
+            console.warn('Local storage update failed', storageErr);
+          }
+        }
 
-      toast.success('Recording published successfully!');
+        console.log("✅ [RECORDING-DEBUG] Success flow complete. Navigating...");
+        resetRecording();
+        setTitle('');
+        
+        // Use navigate to creator panel instead of window.location
+        navigate('/creator-panel');
+      } else {
+        console.error('🎙️ [RECORDING-DEBUG] Response missing expected data', data);
+        toast.error('Failed to save recording to server');
+      }
     } catch (err) {
-      console.error('Server save failed', err);
-      toast.error('Failed to save recording to server');
+      console.error('🎙️ [RECORDING-DEBUG] CATCH BLOCK HIT:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to save recording to server';
+      toast.error(errorMessage);
     } finally {
       setIsUploading(false);
-      setTitle('');
-      resetRecording();
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
     }
   };
 

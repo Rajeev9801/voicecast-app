@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { podcastService } from '../services/podcastService';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
 import { useAuth } from './AuthContext';
+import { validateAudio } from '../utils/audioValidator';
 
 const VoiceContext = createContext(null);
 
@@ -57,49 +58,116 @@ export const VoiceProvider = ({ children }) => {
     speak(newMuted ? "Muted" : "Unmuted");
   }, [isMuted, volume, speak]);
 
-  const playPodcast = useCallback(async (podcast) => {
-    if (!podcast) return;
-    console.log("PLAYING PODCAST:", podcast.title);
-    setCurrentPodcast(podcast);
-    try {
-      let audioUrl = podcast.audio || podcast.audioUrl;
-      if (podcast.source === 'itunes' && podcast.feedUrl) {
-        const episodes = await podcastService.getFeedEpisodes(podcast.feedUrl);
-        if (episodes?.length > 0) audioUrl = episodes[0].audio || episodes[0].audioUrl;
-      }
-
-      if (audioUrl && audioRef.current) {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const finalUrl = audioUrl.startsWith('http') ? audioUrl : `${baseUrl}${audioUrl.startsWith('/') ? '' : '/'}${audioUrl}`;
-        audioRef.current.pause();
-        audioRef.current.src = finalUrl;
-        audioRef.current.load();
-        audioRef.current.volume = volume;
-        audioRef.current.muted = isMuted;
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-        }
-      }
-    } catch (err) {
-      console.error("Playback error:", err);
-      showToast('Audio source error');
-    }
-  }, [showToast, volume, isMuted]);
+  // Use a ref for playPodcast to break the circular dependency with handleNext
+  const playPodcastRef = useRef();
 
   const handleNext = useCallback(() => {
     if (podcasts.length === 0) return;
     const idx = podcasts.findIndex(p => p.id === currentPodcast?.id || p._id === currentPodcast?._id);
     const nextIdx = (idx + 1) % podcasts.length;
-    playPodcast(podcasts[nextIdx]);
-  }, [podcasts, currentPodcast, playPodcast]);
+    if (playPodcastRef.current) playPodcastRef.current(podcasts[nextIdx]);
+  }, [podcasts, currentPodcast]);
 
   const handlePrev = useCallback(() => {
     if (podcasts.length === 0) return;
     const idx = podcasts.findIndex(p => p.id === currentPodcast?.id || p._id === currentPodcast?._id);
     const prevIdx = (idx - 1 + podcasts.length) % podcasts.length;
-    playPodcast(podcasts[prevIdx]);
-  }, [podcasts, currentPodcast, playPodcast]);
+    if (playPodcastRef.current) playPodcastRef.current(podcasts[prevIdx]);
+  }, [podcasts, currentPodcast]);
+
+  const playPodcast = useCallback(async (podcast) => {
+    if (!podcast) return;
+    console.log("🎵 [PLAYBACK] Requesting podcast:", podcast.title);
+    setCurrentPodcast(podcast);
+    
+    try {
+      let audioUrl = podcast.audio || podcast.audioUrl;
+      
+      // Handle iTunes/RSS feeds if applicable
+      if (podcast.source === 'itunes' && podcast.feedUrl) {
+        console.log("🔍 Fetching episodes for iTunes feed:", podcast.feedUrl);
+        const episodes = await podcastService.getFeedEpisodes(podcast.feedUrl);
+        if (episodes?.length > 0) {
+          audioUrl = episodes[0].audio || episodes[0].audioUrl;
+        }
+      }
+
+      console.log("📍 Initial audio source path:", audioUrl);
+
+      if (audioUrl && audioRef.current) {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        
+        // Normalize slashes and ensure leading slash if not absolute
+        let normalizedPath = audioUrl.replace(/\\/g, '/');
+        if (!normalizedPath.startsWith('http') && !normalizedPath.startsWith('/')) {
+          normalizedPath = '/' + normalizedPath;
+        }
+
+        const finalUrl = normalizedPath.startsWith('http') 
+          ? normalizedPath 
+          : `${baseUrl}${normalizedPath}`;
+        
+        console.log("🔊 FINAL AUDIO URL:", finalUrl);
+
+        // LAZY VALIDATION: Just a quick check before playing
+        // If it's a known valid source or relative path, we can skip or do shallow check
+        if (finalUrl.startsWith('http')) {
+          console.log("🧪 Performing quick validation...");
+          const isValid = await validateAudio(finalUrl);
+          if (!isValid) {
+            console.warn("⚠️ Audio validation failed for:", finalUrl);
+            showToast('Audio source unavailable');
+            handleNext(); // Auto skip to next
+            return;
+          }
+        }
+
+        console.log("📻 Audio element state:", {
+          paused: audioRef.current.paused,
+          readyState: audioRef.current.readyState,
+          volume: audioRef.current.volume,
+          muted: audioRef.current.muted
+        });
+
+        audioRef.current.pause();
+        audioRef.current.src = finalUrl;
+        audioRef.current.load();
+        audioRef.current.volume = volume;
+        audioRef.current.muted = isMuted;
+
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log("✅ Playback started successfully");
+              setIsPlaying(true);
+            })
+            .catch((err) => {
+              console.error("❌ Playback failed:", err);
+              setIsPlaying(false);
+              if (err.name !== 'AbortError') {
+                showToast('Playback failed. Trying next...');
+                handleNext();
+              }
+            });
+        }
+      } else {
+        if (!audioUrl) {
+          console.warn("⚠️ No audio URL found for this podcast");
+          showToast('Audio source missing');
+          handleNext();
+        }
+        if (!audioRef.current) console.warn("⚠️ audioRef.current is not available");
+      }
+    } catch (err) {
+      console.error("🔥 Playback error:", err);
+      showToast('Audio playback error');
+      handleNext();
+    }
+  }, [showToast, volume, isMuted, handleNext]);
+
+  // Sync the ref with the latest playPodcast identity
+  playPodcastRef.current = playPodcast;
 
   const toggleMic = useCallback(() => {
     if (isListening) stopListening();

@@ -65,9 +65,9 @@ const Library = () => {
         
         <div className="flex-1">
           <h3 className="text-xl font-bold mb-6">Saved Content</h3>
-          {podcasts.length > 0 ? (
+          {podcasts.filter(p => p.audio || p.audioUrl).length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {podcasts.slice(0, 10).map((podcast) => (
+              {podcasts.filter(p => p.audio || p.audioUrl).slice(0, 10).map((podcast) => (
                 <PodcastCard 
                   key={podcast._id || podcast.id} 
                   podcast={podcast} 

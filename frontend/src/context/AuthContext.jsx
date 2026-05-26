@@ -43,6 +43,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password, role) => {
+    console.log("LOGIN PAYLOAD", {
+      email,
+      password,
+      role
+    });
+
+    if (!email || !password) {
+      console.warn("🚫 [AUTH] Login aborted: Missing email or password");
+      return;
+    }
+
     try {
       setLoading(true);
       // Map 'listener' to 'user' for the URL if needed, but the backend handles it too

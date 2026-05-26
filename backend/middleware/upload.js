@@ -10,17 +10,32 @@ const storage = multer.diskStorage({
   }
 });
 
+const fileFilter = (req, file, cb) => {
+  if (file.fieldname === 'audio') {
+    if (file.mimetype.startsWith('audio/') || file.mimetype.includes('webm')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed!'));
+    }
+  } else if (file.fieldname === 'thumbnail' || file.fieldname === 'image') {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  } else {
+    // Fallback for single uploads
+    if (file.mimetype.startsWith('audio/') || file.mimetype.startsWith('image/') || file.mimetype.includes('webm')) {
+      cb(null, true);
+    } else {
+      cb(new Error('File type not allowed!'));
+    }
+  }
+};
+
 const upload = multer({
   storage: storage,
-  fileFilter: (req, file, cb) => {
-    const filetypes = /mp3|wav|m4a|webm/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = file.mimetype.includes('audio') || file.mimetype.includes('webm');
-    if (extname || mimetype) {
-      return cb(null, true);
-    }
-    cb(new Error('Only audio files are allowed!'));
-  }
+  fileFilter: fileFilter
 });
 
 export default upload;

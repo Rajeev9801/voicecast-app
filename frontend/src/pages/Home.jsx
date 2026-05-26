@@ -4,6 +4,7 @@ import { podcastService } from '../services/podcastService';
 import Navbar from '../components/Navbar';
 import PodcastCard from '../components/PodcastCard';
 import { motion } from 'framer-motion';
+import { filterValidPodcasts } from '../utils/audioValidator';
 
 export default function Home({ podcasts: initialPodcasts, trendingPodcasts }) {
   const { 
@@ -15,20 +16,23 @@ export default function Home({ podcasts: initialPodcasts, trendingPodcasts }) {
 
   const [searchQuery, setSearchQuery] = useState('');
   
+  console.log("🏠 [HOME] Received podcasts:", initialPodcasts?.length || 0);
+  console.log("🏠 [HOME] Received trending:", trendingPodcasts?.length || 0);
+
   // MANDATORY: Non-destructive filtering
-  const filteredRecommended = searchQuery.trim() === ""
+  const filteredRecommended = (searchQuery.trim() === ""
     ? initialPodcasts || []
     : (initialPodcasts || []).filter(p => 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.author?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      )).filter(p => p.audio || p.audioUrl);
 
-  const filteredTrending = searchQuery.trim() === ""
+  const filteredTrending = (searchQuery.trim() === ""
     ? trendingPodcasts || []
     : (trendingPodcasts || []).filter(p => 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.author?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      )).filter(p => p.audio || p.audioUrl);
 
   // Fallback loading if props are empty
   useEffect(() => {

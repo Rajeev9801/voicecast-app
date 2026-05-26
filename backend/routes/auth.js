@@ -11,14 +11,37 @@ import {
   addToHistory,
   getHistory,
   createPlaylist,
-  addToPlaylist
+  addToPlaylist,
+  forgotPasswordUser,
+  resetPasswordUser,
+  verifyResetOTP,
+  verifyOTP,
+  sendOTP,
+  requestAdminOTP,
+  setAdminPassword
 } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+console.log("🚦 [AUTH] Routes loading...");
 
 router.post('/register', registerUser);
 router.post('/login', authUser);
+router.post('/login/:role', authUser);
+
+// Admin specific login/setup routes
+router.post('/admin/request-otp', requestAdminOTP);
+router.post('/admin/set-password', setAdminPassword);
+
+// Generic Forgot Password (for users)
+router.post('/forgot-password', forgotPasswordUser);
+router.post('/verify-reset-otp', verifyResetOTP);
+router.post('/reset-password', resetPasswordUser);
+
+// OTP Verification & Resend
+router.post('/verify-otp', verifyOTP);
+router.post('/send-otp', sendOTP);
+
 router.route('/profile')
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);
@@ -27,21 +50,6 @@ router.route('/profile')
 router.route('/history')
   .post(protect, addToHistory)
   .get(protect, getHistory);
-
-// Playlists
-router.route('/playlists')
-  .post(protect, createPlaylist)
-  .get(protect, (req, res) => {
-    User.findById(req.user._id).then(user => res.json(user.playlists));
-  });
-
-router.route('/playlists/:name')
-  .delete(protect, (req, res) => {
-    User.findById(req.user._id).then(user => {
-      user.playlists = user.playlists.filter(p => p.name !== req.params.name);
-      user.save().then(() => res.json({ message: 'Playlist deleted' }));
-    });
-  });
 
 router.post('/playlists/:name/add', protect, addToPlaylist);
 

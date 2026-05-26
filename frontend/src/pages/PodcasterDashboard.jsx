@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useVoice } from '../context/VoiceContext';
 import { toast } from 'react-toastify';
 import { Mic, Radio, Upload, Trash2, Edit, BarChart, Users, Play } from 'lucide-react';
+import StatCard from '../components/StatCard';
 
 export default function PodcasterDashboard() {
   const { user } = useAuth();
@@ -22,19 +23,26 @@ export default function PodcasterDashboard() {
 
   const fetchCreatorData = async () => {
     try {
+      console.log("📊 [CREATOR-HUB] Fetching creator data...");
       const profile = await userService.getProfile();
       setRecordings(profile.recordings || []);
       
-      // Fetch podcasts by this user
-      const myPodcasts = await podcastService.getMyPodcasts();
+      // Fetch podcasts and stats in parallel
+      const [myPodcasts, creatorStats] = await Promise.all([
+        podcastService.getMyPodcasts(),
+        userService.getCreatorStats()
+      ]);
+
+      console.log("📊 [CREATOR-HUB] Podcasts:", myPodcasts.length);
+      console.log("📊 [CREATOR-HUB] Stats:", creatorStats);
+
       setPodcasts(myPodcasts);
-      
-      // Mock stats
       setStats({
-        totalListens: myPodcasts.reduce((acc, curr) => acc + (curr.listens || 0), 0),
-        totalFollowers: Math.floor(Math.random() * 500)
+        totalListens: creatorStats.totalPlays || 0,
+        totalFollowers: creatorStats.totalFollowers || 0
       });
     } catch (err) {
+      console.error("🔥 [CREATOR-HUB] Load Failed:", err);
       toast.error('Failed to load creator data');
     } finally {
       setLoading(false);
@@ -156,24 +164,6 @@ export default function PodcasterDashboard() {
           </div>
         </section>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ icon, title, value, color }) {
-  const colors = {
-    green: 'bg-green-500/10 text-green-500',
-    blue: 'bg-blue-500/10 text-blue-500',
-    purple: 'bg-purple-500/10 text-purple-500'
-  };
-
-  return (
-    <div className="bg-zinc-900 p-8 rounded-3xl border border-zinc-800 hover:border-zinc-700 transition-all">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${colors[color]}`}>
-        {React.cloneElement(icon, { size: 24 })}
-      </div>
-      <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{title}</h3>
-      <p className="text-4xl font-black mt-2">{value}</p>
     </div>
   );
 }

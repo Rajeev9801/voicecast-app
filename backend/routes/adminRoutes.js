@@ -5,7 +5,8 @@ import {
   getAllPodcasts, 
   deleteUser, 
   deletePodcast,
-  updateUserRole
+  updateUserRole,
+  getAdminStats
 } from '../controllers/adminController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -15,6 +16,7 @@ const router = express.Router();
 router.use(protect);
 router.use(admin);
 
+router.get('/stats', getAdminStats);
 router.get('/analytics', getAnalytics);
 router.get('/users', getAllUsers);
 router.get('/podcasts', getAllPodcasts);

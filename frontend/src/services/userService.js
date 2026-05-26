@@ -54,7 +54,7 @@ export const userService = {
   // Playlists
   getPlaylists: async () => {
     try {
-      const { data } = await api.get('/api/auth/playlists');
+      const { data } = await api.get('/api/playlists');
       return data;
     } catch (err) {
       console.error('Get playlists error:', err);
@@ -64,7 +64,7 @@ export const userService = {
 
   createPlaylist: async (name) => {
     try {
-      const { data } = await api.post('/api/auth/playlists', { name });
+      const { data } = await api.post('/api/playlists', { name });
       return data;
     } catch (err) {
       console.error('Create playlist error:', err);
@@ -74,7 +74,7 @@ export const userService = {
 
   addToPlaylist: async (playlistId, podcastId) => {
     try {
-      const { data } = await api.post(`/api/auth/playlists/${playlistId}/add`, { podcastId });
+      const { data } = await api.post(`/api/playlists/${playlistId}/add`, { podcastId });
       return data;
     } catch (err) {
       console.error('Add to playlist error:', err);
@@ -84,7 +84,7 @@ export const userService = {
 
   removeFromPlaylist: async (playlistId, podcastId) => {
     try {
-      const { data } = await api.delete(`/api/auth/playlists/${playlistId}`);
+      const { data } = await api.post(`/api/playlists/${playlistId}/remove`, { podcastId });
       return data;
     } catch (err) {
       console.error('Remove from playlist error:', err);
@@ -94,10 +94,24 @@ export const userService = {
 
   deletePlaylist: async (playlistId) => {
     try {
-      const { data } = await api.delete(`/api/auth/playlists/${playlistId}`);
+      const { data } = await api.delete(`/api/playlists/${playlistId}`);
       return data;
     } catch (err) {
       console.error('Delete playlist error:', err);
+      throw err;
+    }
+  },
+
+  saveRecording: async (formData) => {
+    try {
+      console.log("💾 [USER-SERVICE] Sending POST to /api/recordings/save");
+      const response = await api.post('/api/recordings/save', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      console.log("💾 [USER-SERVICE] Success! Status:", response.status);
+      return response.data;
+    } catch (err) {
+      console.error('💾 [USER-SERVICE] API Error:', err.response?.data || err.message);
       throw err;
     }
   },
@@ -161,6 +175,26 @@ export const userService = {
       return data;
     } catch (err) {
       console.error('API Error getting analytics:', err);
+      throw err;
+    }
+  },
+
+  getStatsAdmin: async () => {
+    try {
+      const { data } = await api.get('/api/admin/stats');
+      return data;
+    } catch (err) {
+      console.error('API Error getting stats:', err);
+      throw err;
+    }
+  },
+
+  getCreatorStats: async () => {
+    try {
+      const { data } = await api.get('/api/podcasts/creator-stats');
+      return data;
+    } catch (err) {
+      console.error('API Error getting creator stats:', err);
       throw err;
     }
   },

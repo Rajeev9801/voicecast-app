@@ -16,7 +16,18 @@ const podcastSchema = new mongoose.Schema({
   audio: String,
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    required: true,
+    refPath: 'onModel'
+  },
+  on: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    refPath: 'onModel'
+  },
+  onModel: {
+    type: String,
+    required: true,
+    enum: ['User', 'Artist']
   },
   uploadedAt: {
     type: Date,
@@ -24,6 +35,7 @@ const podcastSchema = new mongoose.Schema({
   },
   duration: Number,
   category: String,
+  genre: String,
   isPublic: {
     type: Boolean,
     default: true
@@ -32,6 +44,8 @@ const podcastSchema = new mongoose.Schema({
     type: Number,
     default: 0
   }
+}, {
+  timestamps: true
 });
 
 const Podcast = mongoose.model('Podcast', podcastSchema);

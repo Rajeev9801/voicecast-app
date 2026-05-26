@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Artist from '../models/Artist.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'voicecast-secret-key-2024';
 
@@ -14,9 +15,26 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
       
-      req.user = await User.findById(decoded.id).select('-password');
+      console.log(`🛡️ [AUTH-DEBUG] Protecting route. Decoded ID: ${decoded.id}, Role: ${decoded.role}`);
+
+      // Try searching based on role first
+      if (decoded.role === 'artist' || decoded.role === 'podcaster') {
+        req.user = await Artist.findById(decoded.id).select('-password');
+      } else {
+        req.user = await User.findById(decoded.id).select('-password');
+      }
+
+      // Fallback: if not found in preferred collection, check the other one
+      if (!req.user) {
+        console.log(`⚠️ [AUTH-DEBUG] User not found in preferred collection for role ${decoded.role}. Trying fallback...`);
+        req.user = await User.findById(decoded.id).select('-password');
+        if (!req.user) {
+          req.user = await Artist.findById(decoded.id).select('-password');
+        }
+      }
       
       if (!req.user) {
+        console.log("❌ [AUTH-DEBUG] User not found in any collection after decoding token.");
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
@@ -43,7 +61,7 @@ export const admin = (req, res, next) => {
 };
 
 export const podcaster = (req, res, next) => {
-  if (req.user && (req.user.role === 'podcaster' || req.user.role === 'admin')) {
+  if (req.user && (req.user.role === 'podcaster' || req.user.role === 'artist' || req.user.role === 'admin')) {
     next();
   } else {
     res.status(403).json({ message: 'Not authorized as a podcaster' });

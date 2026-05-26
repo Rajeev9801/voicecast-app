@@ -130,8 +130,8 @@ export default function UserDashboard() {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-4">
-            <StatsBox label="Playlists" value={safeProfile.playlists?.length || 0} icon={<ListMusic size={16} />} />
-            <StatsBox label="Liked" value={safeProfile.likedSongs?.length || 0} icon={<Heart size={16} />} />
+            <StatCard variant="simple" label="Playlists" title="Playlists" value={safeProfile.playlists?.length || 0} icon={<ListMusic size={16} />} />
+            <StatCard variant="simple" label="Liked" title="Liked" value={safeProfile.likedSongs?.length || 0} icon={<Heart size={16} />} />
           </div>
         </div>
 
@@ -203,18 +203,6 @@ export default function UserDashboard() {
           </section>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatsBox({ label, value, icon }) {
-  return (
-    <div className="bg-zinc-900 p-5 rounded-3xl border border-zinc-800 group hover:border-zinc-700 transition-all">
-      <div className="flex items-center gap-2 text-zinc-500 mb-2">
-        {icon}
-        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
-      </div>
-      <p className="text-2xl font-black">{value}</p>
     </div>
   );
 }
