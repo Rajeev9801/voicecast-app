@@ -429,34 +429,26 @@ export const requestAdminOTP = async (req, res) => {
     const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
     const ADMIN_EMAIL = "rajeevkumar9801456p@gmail.com";
 
-    console.log("-----------------------------------------");
-    console.log("🛡️ [ADMIN-LOGIN] Requesting OTP");
-    console.log("ADMIN LOGIN EMAIL:", email);
-    console.log("EXPECTED ADMIN:", ADMIN_EMAIL);
+    console.log("🛡️ [ADMIN-LOGIN] Requesting OTP for:", email);
 
     if (email.replace(/\s/g, '') !== ADMIN_EMAIL.replace(/\s/g, '')) {
-      console.log("❌ [ADMIN-LOGIN] FAILED: Access Denied for", email);
+      console.log("❌ [ADMIN-LOGIN] FAILED: Email mismatch");
       return res.status(403).json({
         success: false,
         message: "Access Denied"
       });
     }
 
-    // Find or create the admin user
     let user = await User.findOne({ email: email.replace(/\s/g, '') });
     if (!user) {
-      console.log("📝 [ADMIN-LOGIN] Creating new admin record");
+      console.log("📝 [ADMIN-LOGIN] Initializing new admin record");
       user = new User({
         name: "Administrator",
         email: email.replace(/\s/g, ''),
-        password: Math.random().toString(36).slice(-10), // Placeholder
+        password: Math.random().toString(36).slice(-10),
         role: 'admin',
         isVerified: true
       });
-    } else {
-      console.log("📝 [ADMIN-LOGIN] Admin record found. Ensuring role/verification.");
-      user.role = 'admin'; // Ensure role is correct
-      user.isVerified = true;
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -464,24 +456,17 @@ export const requestAdminOTP = async (req, res) => {
     user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    const isBypass = process.env.BYPASS_OTP === 'true' && process.env.NODE_ENV !== 'production';
-    if (isBypass) {
-      console.log("⚠️ [ADMIN-BYPASS] Mocking Admin OTP send success.");
-      return res.json({ success: true, message: 'Admin Access Code sent (Bypass Active)', bypass: true });
-    }
-
-    const emailSent = await sendOTPEmail(email, otp, 'reset');
-    if (!emailSent) {
-      console.error("❌ [ADMIN-LOGIN] Failed to send OTP email");
-      return res.status(500).json({ message: 'Error sending OTP' });
-    }
-
-    console.log("✅ [ADMIN-LOGIN] OTP sent to", email);
+    console.log("📧 [ADMIN-LOGIN] Triggering email service...");
+    await sendOTPEmail(email, otp, 'reset');
+    
+    console.log("✅ [ADMIN-LOGIN] OTP sequence successful");
     res.json({ success: true, message: 'Admin Access Code sent to your email' });
-    console.log("-----------------------------------------");
   } catch (error) {
-    console.error("🔥 [ADMIN-LOGIN-ERROR]:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("🔥 [ADMIN-LOGIN-FATAL]:", error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || "Internal Server Error during OTP request"
+    });
   }
 };
 
