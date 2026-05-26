@@ -168,14 +168,9 @@ export const authUser = async (req, res) => {
     // Strict Admin Access Check
     if (role === 'admin' || req.originalUrl.includes('/admin')) {
       console.log("🛡️ [ADMIN-AUTH] Verifying Admin Identity...");
-      console.log("INPUT EMAIL:", email);
-      console.log("TARGET EMAIL:", ADMIN_EMAIL);
       
       const cleanInput = email.replace(/\s/g, '');
       const cleanTarget = ADMIN_EMAIL.replace(/\s/g, '');
-      
-      console.log("CLEAN INPUT:", cleanInput);
-      console.log("CLEAN TARGET:", cleanTarget);
 
       if (cleanInput !== cleanTarget) {
         console.log("❌ [ADMIN-AUTH] FAILED: Access Denied for", email);

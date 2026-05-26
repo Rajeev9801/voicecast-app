@@ -248,7 +248,7 @@ const AdminLogin = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
-                    placeholder="rajeevkumar9801456p @AppData\Local\Microsoft\Edge\User Data\Default\Workspaces\Collaborators Photos\rajeevkumar766820@gmail.com.png"
+                    placeholder="admin@example.com"
                     required
                   />
                 </div>

@@ -17,6 +17,9 @@ const RESEND_API_KEY = rawKey.replace(/[\"\'\s\(\)\[\]]/g, '').trim();
 let resend = null;
 if (RESEND_API_KEY) {
   try {
+    if (RESEND_API_KEY === 're_your_api_key_here') {
+      console.warn("⚠️ [RESEND-INIT] Placeholder API key detected. Email will fail in production.");
+    }
     resend = new Resend(RESEND_API_KEY);
     const keyPrefix = RESEND_API_KEY.substring(0, 7);
     console.log(`📧 [RESEND-INIT] Service Initialized with sanitized key prefix: ${keyPrefix}...`);
@@ -28,19 +31,20 @@ if (RESEND_API_KEY) {
 }
 
 export const verifyMailConnection = async () => {
-  if (!RESEND_API_KEY) return false;
-  if (!resend) return false;
-  return RESEND_API_KEY.startsWith('re_');
+  if (!RESEND_API_KEY || !resend) return false;
+  return RESEND_API_KEY.startsWith('re_') && RESEND_API_KEY !== 're_your_api_key_here';
 };
 
 export const getResendDiagnostics = () => {
   return {
     key_exists: !!RESEND_API_KEY,
+    key_is_placeholder: RESEND_API_KEY === 're_your_api_key_here',
     key_raw_length: rawKey.length,
     key_sanitized_length: RESEND_API_KEY.length,
     key_prefix: RESEND_API_KEY ? RESEND_API_KEY.substring(0, 7) : 'NONE',
     initialized: !!resend,
-    bypass_active: process.env.BYPASS_OTP === 'true'
+    bypass_active: process.env.BYPASS_OTP === 'true',
+    node_env: process.env.NODE_ENV
   };
 };
 
