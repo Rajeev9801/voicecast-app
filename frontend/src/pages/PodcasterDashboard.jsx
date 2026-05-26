@@ -24,22 +24,26 @@ export default function PodcasterDashboard() {
   const fetchCreatorData = async () => {
     try {
       console.log("📊 [CREATOR-HUB] Fetching creator data...");
-      const profile = await userService.getProfile();
-      setRecordings(profile.recordings || []);
+      const profileData = await userService.getProfile();
+      const profile = profileData?.success ? profileData.data : profileData;
+      setRecordings(Array.isArray(profile?.recordings) ? profile.recordings : []);
       
       // Fetch podcasts and stats in parallel
-      const [myPodcasts, creatorStats] = await Promise.all([
+      const [myPodcastsRes, creatorStatsRes] = await Promise.all([
         podcastService.getMyPodcasts(),
         userService.getCreatorStats()
       ]);
+
+      const myPodcasts = Array.isArray(myPodcastsRes) ? myPodcastsRes : [];
+      const creatorStats = creatorStatsRes?.success ? creatorStatsRes.data : creatorStatsRes;
 
       console.log("📊 [CREATOR-HUB] Podcasts:", myPodcasts.length);
       console.log("📊 [CREATOR-HUB] Stats:", creatorStats);
 
       setPodcasts(myPodcasts);
       setStats({
-        totalListens: creatorStats.totalPlays || 0,
-        totalFollowers: creatorStats.totalFollowers || 0
+        totalListens: creatorStats?.totalPlays || 0,
+        totalFollowers: creatorStats?.totalFollowers || 0
       });
     } catch (err) {
       console.error("🔥 [CREATOR-HUB] Load Failed:", err);

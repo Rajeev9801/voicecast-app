@@ -105,7 +105,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/30">
-                {stats.recentUsers.map(u => (
+                {(Array.isArray(stats.recentUsers) ? stats.recentUsers : []).map(u => (
                   <tr key={u._id} className="hover:bg-white/[0.03] transition-all group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">

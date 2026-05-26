@@ -23,13 +23,15 @@ export default function UserDashboard() {
     try {
       setLoading(true);
       const data = await userService.getProfile();
-      if (data) {
-        setProfile(data);
-        setEditForm({ name: data.name || '', email: data.email || '' });
+      const profileData = data?.success ? data.data : data;
+      if (profileData) {
+        setProfile(profileData);
+        setEditForm({ name: profileData.name || '', email: profileData.email || '' });
       }
       
-      const historyData = await userService.getHistory();
-      setHistory(historyData?.history || []);
+      const historyRes = await userService.getHistory();
+      const historyList = historyRes?.success ? historyRes.data : (historyRes?.history || historyRes);
+      setHistory(Array.isArray(historyList) ? historyList : []);
     } catch (err) {
       console.error("Dashboard fetch error:", err);
     } finally {
@@ -130,8 +132,8 @@ export default function UserDashboard() {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-4">
-            <StatCard variant="simple" label="Playlists" title="Playlists" value={safeProfile.playlists?.length || 0} icon={<ListMusic size={16} />} />
-            <StatCard variant="simple" label="Liked" title="Liked" value={safeProfile.likedSongs?.length || 0} icon={<Heart size={16} />} />
+            <StatCard variant="simple" label="Playlists" title="Playlists" value={Array.isArray(safeProfile.playlists) ? safeProfile.playlists.length : 0} icon={<ListMusic size={16} />} />
+            <StatCard variant="simple" label="Liked" title="Liked" value={Array.isArray(safeProfile.likedSongs) ? safeProfile.likedSongs.length : 0} icon={<Heart size={16} />} />
           </div>
         </div>
 
@@ -145,9 +147,9 @@ export default function UserDashboard() {
               </h3>
             </div>
             
-            {history.length > 0 ? (
+            {(Array.isArray(history) ? history : []).length > 0 ? (
               <div className="grid grid-cols-1 gap-3">
-                {history.slice(0, 5).map((item, idx) => (
+                {(Array.isArray(history) ? history : []).slice(0, 5).map((item, idx) => (
                   <div key={idx} className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 flex items-center justify-between group hover:border-green-500/30 transition-all">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center group-hover:bg-green-500/20 transition-colors">

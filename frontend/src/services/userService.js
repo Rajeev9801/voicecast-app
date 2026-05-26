@@ -22,7 +22,7 @@ export const userService = {
   getProfile: async () => {
     try {
       const { data } = await api.get('/api/auth/profile');
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       // Return null instead of mock Guest to trigger login redirect
       return null;
@@ -32,8 +32,9 @@ export const userService = {
   updateProfile: async (profileData) => {
     try {
       const { data } = await api.put('/api/auth/profile', profileData);
-      setStorageItem("voicecast_user", data);
-      return data;
+      const updated = data.success ? data.data : data;
+      setStorageItem("voicecast_user", updated);
+      return updated;
     } catch (err) {
       console.error('Update profile error:', err);
       throw err;
@@ -44,7 +45,7 @@ export const userService = {
   toggleLike: async (podcastId) => {
     try {
       const { data } = await api.post('/api/auth/like', { podcastId });
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('Toggle like error:', err);
       throw err;
@@ -55,17 +56,18 @@ export const userService = {
   getPlaylists: async () => {
     try {
       const { data } = await api.get('/api/playlists');
-      return data;
+      const playlists = data.success ? data.data : data;
+      return Array.isArray(playlists) ? playlists : [];
     } catch (err) {
       console.error('Get playlists error:', err);
-      throw err;
+      return [];
     }
   },
 
   createPlaylist: async (name) => {
     try {
       const { data } = await api.post('/api/playlists', { name });
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('Create playlist error:', err);
       throw err;
@@ -75,7 +77,7 @@ export const userService = {
   addToPlaylist: async (playlistId, podcastId) => {
     try {
       const { data } = await api.post(`/api/playlists/${playlistId}/add`, { podcastId });
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('Add to playlist error:', err);
       throw err;
@@ -85,7 +87,7 @@ export const userService = {
   removeFromPlaylist: async (playlistId, podcastId) => {
     try {
       const { data } = await api.post(`/api/playlists/${playlistId}/remove`, { podcastId });
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('Remove from playlist error:', err);
       throw err;
@@ -95,7 +97,7 @@ export const userService = {
   deletePlaylist: async (playlistId) => {
     try {
       const { data } = await api.delete(`/api/playlists/${playlistId}`);
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('Delete playlist error:', err);
       throw err;
@@ -105,11 +107,10 @@ export const userService = {
   saveRecording: async (formData) => {
     try {
       console.log("💾 [USER-SERVICE] Sending POST to /api/recordings/save");
-      const response = await api.post('/api/recordings/save', formData, {
+      const { data } = await api.post('/api/recordings/save', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      console.log("💾 [USER-SERVICE] Success! Status:", response.status);
-      return response.data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('💾 [USER-SERVICE] API Error:', err.response?.data || err.message);
       throw err;
@@ -120,17 +121,18 @@ export const userService = {
   getHistory: async () => {
     try {
       const { data } = await api.get('/api/auth/history');
-      return data;
+      const history = data.success ? data.data : data;
+      return Array.isArray(history) ? history : [];
     } catch (err) {
       console.error('Get history error:', err);
-      throw err;
+      return [];
     }
   },
 
   addToHistory: async (podcastId) => {
     try {
       const { data } = await api.post('/api/auth/history', { podcastId });
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('Add to history error:', err);
       throw err;
@@ -141,17 +143,18 @@ export const userService = {
   getAllUsersAdmin: async () => {
     try {
       const { data } = await api.get('/api/admin/users');
-      return data || [];
+      const users = data.success ? data.data : data;
+      return Array.isArray(users) ? users : [];
     } catch (err) {
       console.error('API Error fetching admin users:', err);
-      throw err;
+      return [];
     }
   },
 
   deleteUserAdmin: async (id) => {
     try {
       const { data } = await api.delete(`/api/admin/users/${id}`);
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('API Error deleting user:', err);
       throw err;
@@ -161,7 +164,7 @@ export const userService = {
   updateUserRoleAdmin: async (id, role) => {
     try {
       const { data } = await api.patch(`/api/admin/users/${id}/role`, { role });
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('API Error updating role:', err);
       throw err;
@@ -172,30 +175,30 @@ export const userService = {
   getAnalytics: async () => {
     try {
       const { data } = await api.get('/api/admin/analytics');
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('API Error getting analytics:', err);
-      throw err;
+      return null;
     }
   },
 
   getStatsAdmin: async () => {
     try {
       const { data } = await api.get('/api/admin/stats');
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('API Error getting stats:', err);
-      throw err;
+      return { totalUsers: 0, totalArtists: 0, totalPodcasts: 0, recentUsers: [] };
     }
   },
 
   getCreatorStats: async () => {
     try {
       const { data } = await api.get('/api/podcasts/creator-stats');
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('API Error getting creator stats:', err);
-      throw err;
+      return { totalPodcasts: 0, totalPlays: 0, totalFollowers: 0 };
     }
   },
 
@@ -203,17 +206,18 @@ export const userService = {
   getAllPodcastsAdmin: async () => {
     try {
       const { data } = await api.get('/api/admin/podcasts');
-      return data || [];
+      const podcasts = data.success ? data.data : data;
+      return Array.isArray(podcasts) ? podcasts : [];
     } catch (err) {
       console.error('API Error fetching podcasts admin:', err);
-      throw err;
+      return [];
     }
   },
 
   deletePodcastAdmin: async (id) => {
     try {
       const { data } = await api.delete(`/api/admin/podcasts/${id}`);
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('API Error deleting podcast:', err);
       throw err;
@@ -224,17 +228,18 @@ export const userService = {
   getAllRecordingsAdmin: async () => {
     try {
       const { data } = await api.get('/api/admin/recordings');
-      return data || [];
+      const recordings = data.success ? data.data : data;
+      return Array.isArray(recordings) ? recordings : [];
     } catch (err) {
       console.error('API Error fetching recordings admin:', err);
-      throw err;
+      return [];
     }
   },
 
   deleteRecordingAdmin: async (id) => {
     try {
       const { data } = await api.delete(`/api/admin/recordings/${id}`);
-      return data;
+      return data.success ? data.data : data;
     } catch (err) {
       console.error('API Error deleting recording:', err);
       throw err;
