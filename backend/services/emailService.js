@@ -45,8 +45,18 @@ export const getResendDiagnostics = () => {
 };
 
 export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
-  const isBypass = process.env.BYPASS_OTP === 'true';
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isBypass = process.env.BYPASS_OTP === 'true' && !isProduction;
   
+  // ALWAYS log the OTP to the backend console/Railway logs for non-production environments.
+  // This allows developers to see the code without needing a verified Resend domain.
+  if (!isProduction) {
+    console.log("-----------------------------------------");
+    console.log(`🔐 [AUTH-TEST-LOG] Generated OTP for ${email}: ${otp}`);
+    console.log(`📌 Purpose: ${purpose}`);
+    console.log("-----------------------------------------");
+  }
+
   if (isBypass) {
     console.log(`⚠️ [RESEND-BYPASS] Skipping actual email send for ${email} (OTP: ${otp})`);
     return true;
