@@ -2,6 +2,10 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dns from 'dns';
+
+// Force IPv4 globally for DNS resolution
+dns.setDefaultResultOrder('ipv4first');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,24 +17,28 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 const MAIL_PROVIDER = process.env.MAIL_PROVIDER || 'gmail';
 
 console.log("-----------------------------------------");
-console.log("📧 [MAIL-INIT] Initializing Nodemailer Service (Railway Patch)");
+console.log("📧 [MAIL-INIT] Initializing Nodemailer Service (Railway IPv4 Patch)");
+console.log("📧 [MAIL-NET] IPv4 enforced");
 console.log("📧 [MAIL-INIT] Provider:", MAIL_PROVIDER);
 console.log("📧 [MAIL-INIT] User:", EMAIL_USER);
-console.log("📧 [MAIL-INIT] Pass Status:", EMAIL_PASS ? "CONFIGURED" : "MISSING");
 console.log("-----------------------------------------");
 
-// Create Transporter with IPv4 fix for Railway
+// Create Transporter with strict IPv4 forcing
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // Use SSL/TLS
-  family: 4,    // Force IPv4 to prevent ENETUNREACH
+  secure: true,
+  requireTLS: true,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
   },
+  // Custom DNS lookup to strictly avoid IPv6
+  lookup: (hostname, options, callback) => {
+    return dns.lookup(hostname, { family: 4 }, callback);
+  },
   tls: {
-    rejectUnauthorized: false // Bypass some certificate issues in containers
+    rejectUnauthorized: false
   },
   connectionTimeout: 10000,
   greetingTimeout: 10000,
@@ -49,13 +57,13 @@ export const verifyMailConnection = async () => {
     // Non-blocking verify
     transporter.verify((error, success) => {
       if (error) {
-        console.error("❌ [MAIL-VERIFY] Background Check FAILED:", error.message);
+        console.error("❌ [MAIL-VERIFY] Background Check FAILED (IPv4):", error.message);
       } else {
-        console.log("✅ [MAIL-VERIFY] READY - Gmail SMTP Connection Verified (IPv4/465)");
+        console.log("✅ [MAIL-VERIFY] READY - Gmail SMTP Connection Verified (Strict IPv4)");
       }
     });
     
-    return true; // Return immediately to prevent startup block
+    return true; 
   } catch (error) {
     console.error("❌ [MAIL-VERIFY] EXCEPTION:", error.message);
     return false;
@@ -67,7 +75,7 @@ export const getMailDiagnostics = () => {
     provider: MAIL_PROVIDER,
     host: 'smtp.gmail.com',
     port: 465,
-    ipv4_forced: true,
+    ipv4_enforced: true,
     user_set: !!EMAIL_USER,
     pass_set: !!EMAIL_PASS,
     node_env: process.env.NODE_ENV
@@ -87,13 +95,11 @@ export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
   };
 
   const subject = subjects[purpose] || 'Verification Code - VoiceCast';
-  const text = `Your ${purpose.replace('_', ' ')} code is: ${otp}. This code will expire in 10 minutes.`;
-
+  
   const mailOptions = {
     from: `"VoiceCast Support" <${EMAIL_USER}>`,
     to: email.trim(),
     subject: subject,
-    text: text,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
         <h2 style="color: #4CAF50;">VoiceCast</h2>
@@ -110,20 +116,12 @@ export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
   };
 
   try {
-    console.log(`📧 [MAIL-SEND] Dispatching to: ${email} via IPv4/465...`);
-    
+    console.log(`📧 [MAIL-SEND] Dispatching to: ${email} via STRICT IPv4...`);
     const info = await transporter.sendMail(mailOptions);
     console.log("✅ [MAIL-SUCCESS] Sent! MessageId:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error("❌ [MAIL-EXCEPTION] Runtime Error:", error.message);
-    
-    if (error.code === 'EAUTH') {
-      throw new Error("SMTP Authentication failed. Check EMAIL_PASS/App Password.");
-    } else if (error.code === 'ENETUNREACH') {
-      throw new Error("Network unreachable (IPv6 issue?). Retrying with IPv4 might help.");
-    }
-
     throw new Error(`Email Delivery Failure: ${error.message}`);
   }
 };
