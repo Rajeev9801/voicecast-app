@@ -20,7 +20,11 @@ export default function AdminAnalytics() {
     const fetchStats = async () => {
       try {
         const data = await userService.getStatsAdmin();
-        setStats(data);
+        setStats({
+          totalUsers: data?.totalUsers || 0,
+          totalArtists: data?.totalArtists || 0,
+          categoryData: data?.categoryData || []
+        });
       } catch (err) {
         console.error('Failed to fetch stats', err);
       } finally {

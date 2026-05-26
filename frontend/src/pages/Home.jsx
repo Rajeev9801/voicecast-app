@@ -23,19 +23,19 @@ export default function Home({ podcasts: initialPodcasts, trendingPodcasts }) {
   const recommendedArray = Array.isArray(initialPodcasts) ? initialPodcasts : [];
   const trendingArray = Array.isArray(trendingPodcasts) ? trendingPodcasts : [];
 
-  const filteredRecommended = (searchQuery.trim() === ""
+  const filteredRecommended = searchQuery.trim() === ""
     ? recommendedArray
     : recommendedArray.filter(p => 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.author?.toLowerCase().includes(searchQuery.toLowerCase())
-      )).filter(p => p.audio || p.audioUrl);
+      );
 
-  const filteredTrending = (searchQuery.trim() === ""
+  const filteredTrending = searchQuery.trim() === ""
     ? trendingArray
     : trendingArray.filter(p => 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.author?.toLowerCase().includes(searchQuery.toLowerCase())
-      )).filter(p => p.audio || p.audioUrl);
+      );
 
   // Fallback loading if props are empty
   useEffect(() => {
