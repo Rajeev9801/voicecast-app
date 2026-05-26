@@ -79,6 +79,26 @@ export const registerUser = async (req, res) => {
 
     await user.save();
 
+    // OTP Bypass for testing/stabilization
+    if (process.env.BYPASS_OTP === 'true') {
+      console.log("⚠️ [AUTH-BYPASS] OTP bypass active. Auto-verifying user.");
+      user.isVerified = true;
+      user.otp = undefined;
+      user.otpExpire = undefined;
+      await user.save();
+      return res.status(201).json({
+        success: true,
+        message: 'User created and auto-verified (Bypass Active)',
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+        token: generateToken(user._id, user.role),
+      });
+    }
+
     const emailSent = await sendOTPEmail(email, otp, 'verification');
     if (!emailSent) {
       console.error(`❌ [AUTH-ERROR] Failed to send verification OTP to ${email}`);
