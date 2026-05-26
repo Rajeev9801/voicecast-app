@@ -33,6 +33,8 @@ router.get('/diagnostic', async (req, res) => {
     res.json({
       success: true,
       resend_key_exists: resendDiag.key_exists,
+      resend_key_raw_length: resendDiag.key_raw_length,
+      resend_key_sanitized_length: resendDiag.key_sanitized_length,
       resend_key_prefix: resendDiag.key_prefix,
       resend_initialized: resendDiag.initialized,
       mongodb_connected: mongoose.connection.readyState === 1,

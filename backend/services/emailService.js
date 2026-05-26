@@ -9,7 +9,9 @@ const __dirname = path.dirname(__filename);
 // Ensure dotenv is loaded
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+let rawKey = process.env.RESEND_API_KEY || '';
+// SANITIZATION: Remove quotes, spaces, and brackets that users often copy-paste by mistake
+const RESEND_API_KEY = rawKey.replace(/[\"\'\s\(\)\[\]]/g, '').trim();
 
 // Robust Resend Initialization
 let resend = null;
@@ -17,7 +19,7 @@ if (RESEND_API_KEY) {
   try {
     resend = new Resend(RESEND_API_KEY);
     const keyPrefix = RESEND_API_KEY.substring(0, 7);
-    console.log(`📧 [RESEND-INIT] Service Initialized with key prefix: ${keyPrefix}...`);
+    console.log(`📧 [RESEND-INIT] Service Initialized with sanitized key prefix: ${keyPrefix}...`);
   } catch (err) {
     console.error("🔥 [RESEND-INIT] FATAL ERROR during initialization:", err.message);
   }
@@ -28,13 +30,14 @@ if (RESEND_API_KEY) {
 export const verifyMailConnection = async () => {
   if (!RESEND_API_KEY) return false;
   if (!resend) return false;
-  // Resend doesn't have a verify method, we assume initialization is enough for basic presence
   return RESEND_API_KEY.startsWith('re_');
 };
 
 export const getResendDiagnostics = () => {
   return {
     key_exists: !!RESEND_API_KEY,
+    key_raw_length: rawKey.length,
+    key_sanitized_length: RESEND_API_KEY.length,
     key_prefix: RESEND_API_KEY ? RESEND_API_KEY.substring(0, 7) : 'NONE',
     initialized: !!resend,
     bypass_active: process.env.BYPASS_OTP === 'true'
