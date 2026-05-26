@@ -31,10 +31,10 @@ router.get('/diagnostic', async (req, res) => {
     const isConnected = await verifyMailConnection();
     res.json({
       success: true,
-      smtp_connected: isConnected,
+      service: 'Resend',
+      email_configured: isConnected,
       env: {
-        EMAIL_USER_SET: !!process.env.EMAIL_USER,
-        EMAIL_PASS_SET: !!process.env.EMAIL_PASS,
+        RESEND_API_KEY_SET: !!process.env.RESEND_API_KEY,
         JWT_SECRET_SET: !!process.env.JWT_SECRET,
         MONGO_URI_SET: !!process.env.MONGO_URI,
         NODE_ENV: process.env.NODE_ENV
