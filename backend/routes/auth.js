@@ -21,9 +21,29 @@ import {
   setAdminPassword
 } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
+import { verifyMailConnection } from '../services/emailService.js';
 
 const router = express.Router();
 console.log("🚦 [AUTH] Routes loading...");
+
+router.get('/diagnostic', async (req, res) => {
+  try {
+    const isConnected = await verifyMailConnection();
+    res.json({
+      success: true,
+      smtp_connected: isConnected,
+      env: {
+        EMAIL_USER_SET: !!process.env.EMAIL_USER,
+        EMAIL_PASS_SET: !!process.env.EMAIL_PASS,
+        JWT_SECRET_SET: !!process.env.JWT_SECRET,
+        MONGO_URI_SET: !!process.env.MONGO_URI,
+        NODE_ENV: process.env.NODE_ENV
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 router.post('/register', registerUser);
 router.post('/login', authUser);

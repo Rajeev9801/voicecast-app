@@ -63,6 +63,6 @@ export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
     console.error("   Error Code:", error.code);
     console.error("   Error Message:", error.message);
     if (error.response) console.error("   SMTP Response:", error.response);
-    return false;
+    throw new Error(`Email Service Failure: ${error.message}`);
   }
 };

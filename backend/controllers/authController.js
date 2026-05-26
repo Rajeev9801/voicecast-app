@@ -88,7 +88,7 @@ export const registerUser = async (req, res) => {
     res.status(200).json({ message: 'Verification OTP sent to your email' });
   } catch (error) {
     console.error("🔥 [AUTH-DEBUG] Registration error:", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -137,7 +137,7 @@ export const verifyOTP = async (req, res) => {
       token: generateToken(user._id, user.role),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -254,7 +254,7 @@ export const authUser = async (req, res) => {
     console.log("==== LOGIN END ====\n");
   } catch (error) {
     console.error("🔥 [LOGIN-CRITICAL-ERROR]:", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -291,7 +291,7 @@ export const sendOTP = async (req, res) => {
 
     res.json({ message: 'OTP sent to your email' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -319,7 +319,7 @@ export const forgotPasswordUser = async (req, res) => {
 
     res.json({ message: 'Reset OTP sent to your email' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -347,7 +347,7 @@ export const forgotPasswordArtist = async (req, res) => {
 
     res.json({ message: 'Reset OTP sent to your email' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -393,7 +393,7 @@ export const resetPasswordArtist = async (req, res) => {
     console.log("-----------------------------------------");
   } catch (error) {
     console.error("🔥 [RESET-DEBUG] CRITICAL ERROR:", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -451,7 +451,7 @@ export const requestAdminOTP = async (req, res) => {
     console.log("-----------------------------------------");
   } catch (error) {
     console.error("🔥 [ADMIN-LOGIN-ERROR]:", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -488,7 +488,7 @@ export const setAdminPassword = async (req, res) => {
     console.log("✅ [ADMIN-PASSWORD-SET] SUCCESS: Password established for admin");
     res.json({ success: true, message: 'Admin password established successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -534,7 +534,7 @@ export const resetPasswordUser = async (req, res) => {
     console.log("-----------------------------------------");
   } catch (error) {
     console.error("🔥 [RESET-DEBUG] CRITICAL ERROR:", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -561,7 +561,7 @@ export const verifyResetOTP = async (req, res) => {
     console.log(`✅ [AUTH-DEBUG] OTP verification SUCCESSFUL for: ${email}`);
     res.json({ success: true, message: 'OTP verified successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -588,7 +588,7 @@ export const getUserProfile = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -621,7 +621,7 @@ export const updateUserProfile = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -633,7 +633,7 @@ export const getAllUsers = async (req, res) => {
     const users = await User.find({}).select('-password');
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -651,7 +651,7 @@ export const deleteUser = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -665,7 +665,7 @@ export const addToHistory = async (req, res) => {
     await user.save();
     res.json({ message: 'History updated' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -674,7 +674,7 @@ export const getHistory = async (req, res) => {
     const user = await User.findById(req.user._id).populate('history.podcast');
     res.json({ history: user.history });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -691,7 +691,7 @@ export const createPlaylist = async (req, res) => {
     res.json({ message: 'Playlist created', playlists: user.playlists });
   } catch (error) {
     console.error("🔥 [PLAYLIST-CREATE] ERROR:", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -714,6 +714,6 @@ export const addToPlaylist = async (req, res) => {
     res.json({ message: 'Added to playlist' });
   } catch (error) {
     console.error("🔥 [PLAYLIST-ADD] ERROR:", error.message);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
