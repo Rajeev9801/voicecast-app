@@ -22,7 +22,7 @@ import {
   setAdminPassword
 } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { verifyMailConnection, getResendDiagnostics } from '../services/emailService.js';
+import { verifyMailConnection, getMailDiagnostics } from '../services/emailService.js';
 import mongoose from 'mongoose';
 
 const router = express.Router();
@@ -30,17 +30,17 @@ console.log("🚦 [AUTH] Routes loading...");
 
 router.get('/diagnostic', async (req, res) => {
   try {
-    const diag = getResendDiagnostics();
+    const diag = getMailDiagnostics();
+    const smtpConnected = await verifyMailConnection();
     res.json({
       success: true,
       node_env: diag.node_env,
       mongodb: mongoose.connection.readyState === 1,
-      resend: {
-        initialized: diag.initialized,
-        raw_exists: diag.raw_key_exists,
-        raw_length: diag.raw_key_length,
-        sanitized_length: diag.sanitized_key_length,
-        sanitized_prefix: diag.sanitized_key_prefix
+      email: {
+        provider: diag.provider,
+        smtp_connected: smtpConnected,
+        user_set: diag.user_set,
+        pass_set: diag.pass_set
       }
     });
   } catch (err) {
