@@ -258,7 +258,7 @@ export const authUser = async (req, res) => {
   }
 };
 
-// @desc    Send OTP (Nodemailer Gmail SMTP)
+// @desc    Send OTP (Brevo Transactional API)
 // @route   POST /api/auth/send-otp
 // @access  Public
 export const sendOTP = async (req, res) => {

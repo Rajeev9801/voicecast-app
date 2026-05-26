@@ -1,75 +1,56 @@
-import nodemailer from 'nodemailer';
+import SibApiV3Sdk from 'sib-api-v3-sdk';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dns from 'dns';
-
-// Force IPv4 globally for DNS resolution
-dns.setDefaultResultOrder('ipv4first');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const SENDER_EMAIL = "rajeevkumar9801456p@gmail.com";
+const SENDER_NAME = "VoiceCast Support";
 
-console.log("-----------------------------------------");
-console.log("📧 [MAIL-INIT] Initializing Nodemailer Service (Gmail Service Patch)");
-console.log("📧 [MAIL-MODE] Gmail service mode enabled");
-console.log("📧 [MAIL-NET] IPv4 enforced");
-console.log("📧 [MAIL-INIT] User:", EMAIL_USER);
-console.log("-----------------------------------------");
+// Initialize Brevo Client
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+const apiKey = defaultClient.authentications['api-key'];
 
-// Create Transporter using Gmail Service Mode
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-  family: 4 // Still force IPv4
-});
+if (BREVO_API_KEY) {
+  apiKey.apiKey = BREVO_API_KEY;
+  console.log("-----------------------------------------");
+  console.log("📧 [MAIL] Brevo initialized");
+  console.log("📧 [MAIL] Sender:", SENDER_EMAIL);
+  console.log("-----------------------------------------");
+} else {
+  console.warn("⚠️ [MAIL] BREVO_API_KEY missing from environment");
+}
 
-// Non-blocking connection check
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+// Maintain interface for server.js compatibility
 export const verifyMailConnection = async () => {
-  try {
-    console.log("📧 [MAIL-VERIFY] Running background connection check...");
-    if (!EMAIL_USER || !EMAIL_PASS) {
-      console.warn("⚠️ [MAIL-VERIFY] Credentials missing, skipping verify.");
-      return false;
-    }
-    
-    // Non-blocking verify
-    transporter.verify((error, success) => {
-      if (error) {
-        console.error("❌ [MAIL-VERIFY] Background Check FAILED (Service Mode):", error.message);
-      } else {
-        console.log("✅ [MAIL-VERIFY] READY - Gmail Service Connection Verified");
-      }
-    });
-    
-    return true; 
-  } catch (error) {
-    console.error("❌ [MAIL-VERIFY] EXCEPTION:", error.message);
+  if (!BREVO_API_KEY) {
+    console.error("❌ [MAIL-VERIFY] FAILED - BREVO_API_KEY missing");
     return false;
   }
+  // Brevo is an API, no persistent connection to verify like SMTP
+  console.log("✅ [MAIL-VERIFY] Brevo API Ready");
+  return true;
 };
 
 export const getMailDiagnostics = () => {
   return {
-    provider: 'gmail_service',
-    ipv4_enforced: true,
-    user_set: !!EMAIL_USER,
-    pass_set: !!EMAIL_PASS,
+    provider: 'Brevo (Transactional API)',
+    api_key_set: !!BREVO_API_KEY,
+    sender: SENDER_EMAIL,
     node_env: process.env.NODE_ENV
   };
 };
 
 export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`🔐 [MAIL-DEBUG] Generated OTP for ${email}: ${otp}`);
+  if (!BREVO_API_KEY) {
+    throw new Error("Brevo API Key not configured");
   }
 
   const subjects = {
@@ -81,32 +62,40 @@ export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
 
   const subject = subjects[purpose] || 'Verification Code - VoiceCast';
   
-  const mailOptions = {
-    from: `"VoiceCast Support" <${EMAIL_USER}>`,
-    to: email.trim(),
-    subject: subject,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
-        <h2 style="color: #4CAF50;">VoiceCast</h2>
-        <p>Hello,</p>
-        <p>Your <strong>${purpose.replace('_', ' ')}</strong> code is:</p>
-        <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; letter-spacing: 5px; font-weight: bold; color: #333;">
-          ${otp}
-        </div>
-        <p>This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #777;">This is an automated message from VoiceCast. Please do not reply.</p>
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+  sendSmtpEmail.subject = subject;
+  sendSmtpEmail.htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
+      <h2 style="color: #4CAF50;">VoiceCast</h2>
+      <p>Hello,</p>
+      <p>Your <strong>${purpose.replace('_', ' ')}</strong> code is:</p>
+      <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; letter-spacing: 5px; font-weight: bold; color: #333;">
+        ${otp}
       </div>
-    `,
-  };
+      <p>This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #777;">This is an automated message from VoiceCast. Please do not reply.</p>
+    </div>
+  `;
+  sendSmtpEmail.sender = { "name": SENDER_NAME, "email": SENDER_EMAIL };
+  sendSmtpEmail.to = [{ "email": email.trim() }];
 
   try {
-    console.log(`📧 [MAIL-SEND] Dispatching to: ${email} via Gmail Service...`);
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ [MAIL-SUCCESS] Sent! MessageId:", info.messageId);
-    return { success: true, messageId: info.messageId };
+    console.log(`📧 [MAIL] Sending OTP to: ${email}`);
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log("✅ [MAIL] OTP sent successfully. MessageId:", data.messageId);
+    return { success: true, messageId: data.messageId };
   } catch (error) {
-    console.error("❌ [MAIL-EXCEPTION] Runtime Error:", error.message);
-    throw new Error(`Email Delivery Failure: ${error.message}`);
+    console.error("❌ [MAIL-EXCEPTION] Brevo Error:", error.response?.text || error.message);
+    
+    let detailedError = error.message;
+    if (error.response?.text) {
+      try {
+        const parsed = JSON.parse(error.response.text);
+        detailedError = parsed.message || detailedError;
+      } catch (e) {}
+    }
+    
+    throw new Error(`Email Delivery Failure (Brevo): ${detailedError}`);
   }
 };
