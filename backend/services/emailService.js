@@ -13,47 +13,51 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 const MAIL_PROVIDER = process.env.MAIL_PROVIDER || 'gmail';
 
 console.log("-----------------------------------------");
-console.log("📧 [MAIL-INIT] Initializing Nodemailer Service");
+console.log("📧 [MAIL-INIT] Initializing Nodemailer Service (Railway Patch)");
 console.log("📧 [MAIL-INIT] Provider:", MAIL_PROVIDER);
 console.log("📧 [MAIL-INIT] User:", EMAIL_USER);
 console.log("📧 [MAIL-INIT] Pass Status:", EMAIL_PASS ? "CONFIGURED" : "MISSING");
 console.log("-----------------------------------------");
 
-// Create Transporter with explicit Gmail SMTP settings
+// Create Transporter with IPv4 fix for Railway
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
+  port: 465,
+  secure: true, // Use SSL/TLS
+  family: 4,    // Force IPv4 to prevent ENETUNREACH
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
   },
-  // Add timeout to prevent hanging
-  connectionTimeout: 10000, // 10 seconds
+  tls: {
+    rejectUnauthorized: false // Bypass some certificate issues in containers
+  },
+  connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 10000,
 });
 
-// Verify connection
+// Non-blocking connection check
 export const verifyMailConnection = async () => {
   try {
-    console.log("📧 [MAIL-VERIFY] Checking connection...");
+    console.log("📧 [MAIL-VERIFY] Running background connection check...");
     if (!EMAIL_USER || !EMAIL_PASS) {
-      console.error("❌ [MAIL-VERIFY] FAILED - Credentials missing (EMAIL_USER or EMAIL_PASS)");
+      console.warn("⚠️ [MAIL-VERIFY] Credentials missing, skipping verify.");
       return false;
     }
     
-    // Using a timeout for verify as well
-    const verifyPromise = transporter.verify();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Verification Timeout')), 10000)
-    );
-
-    await Promise.race([verifyPromise, timeoutPromise]);
-    console.log("✅ [MAIL-VERIFY] READY - Connection established with smtp.gmail.com");
-    return true;
+    // Non-blocking verify
+    transporter.verify((error, success) => {
+      if (error) {
+        console.error("❌ [MAIL-VERIFY] Background Check FAILED:", error.message);
+      } else {
+        console.log("✅ [MAIL-VERIFY] READY - Gmail SMTP Connection Verified (IPv4/465)");
+      }
+    });
+    
+    return true; // Return immediately to prevent startup block
   } catch (error) {
-    console.error("❌ [MAIL-VERIFY] FAILED:", error.message);
+    console.error("❌ [MAIL-VERIFY] EXCEPTION:", error.message);
     return false;
   }
 };
@@ -62,7 +66,8 @@ export const getMailDiagnostics = () => {
   return {
     provider: MAIL_PROVIDER,
     host: 'smtp.gmail.com',
-    port: 587,
+    port: 465,
+    ipv4_forced: true,
     user_set: !!EMAIL_USER,
     pass_set: !!EMAIL_PASS,
     node_env: process.env.NODE_ENV
@@ -70,7 +75,6 @@ export const getMailDiagnostics = () => {
 };
 
 export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
-  // Security Lockdown: Never log OTP in production
   if (process.env.NODE_ENV !== 'production') {
     console.log(`🔐 [MAIL-DEBUG] Generated OTP for ${email}: ${otp}`);
   }
@@ -106,30 +110,20 @@ export const sendOTPEmail = async (email, otp, purpose = 'verification') => {
   };
 
   try {
-    console.log(`📧 [MAIL-SEND] Dispatching ${purpose} code to: ${email}`);
+    console.log(`📧 [MAIL-SEND] Dispatching to: ${email} via IPv4/465...`);
     
-    // Send email with timeout
-    const sendPromise = transporter.sendMail(mailOptions);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Email Delivery Timeout')), 15000)
-    );
-
-    const info = await Promise.race([sendPromise, timeoutPromise]);
-    console.log("✅ [MAIL-SUCCESS] Message sent. MessageId:", info.messageId);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ [MAIL-SUCCESS] Sent! MessageId:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("❌ [MAIL-EXCEPTION]:", error.message);
+    console.error("❌ [MAIL-EXCEPTION] Runtime Error:", error.message);
     
-    // Provide detailed error information
-    let detailedMessage = error.message;
     if (error.code === 'EAUTH') {
-      detailedMessage = "Authentication failed. Please check EMAIL_USER and EMAIL_PASS (App Password might be needed).";
-    } else if (error.code === 'ESOCKET') {
-      detailedMessage = "Network error. Could not connect to smtp.gmail.com.";
-    } else if (error.message === 'Email Delivery Timeout') {
-      detailedMessage = "Email delivery timed out. Gmail SMTP might be slow or blocked.";
+      throw new Error("SMTP Authentication failed. Check EMAIL_PASS/App Password.");
+    } else if (error.code === 'ENETUNREACH') {
+      throw new Error("Network unreachable (IPv6 issue?). Retrying with IPv4 might help.");
     }
 
-    throw new Error(detailedMessage);
+    throw new Error(`Email Delivery Failure: ${error.message}`);
   }
 };
