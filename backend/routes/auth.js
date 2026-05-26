@@ -63,7 +63,7 @@ router.post('/forgot-password', forgotPasswordUser);
 router.post('/verify-reset-otp', verifyResetOTP);
 router.post('/reset-password', resetPasswordUser);
 
-// OTP Verification & Resend
+// OTP Verification & Retry
 router.post('/verify-otp', verifyOTP);
 router.post('/send-otp', sendOTP);
 

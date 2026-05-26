@@ -258,7 +258,7 @@ export const authUser = async (req, res) => {
   }
 };
 
-// @desc    Send OTP (for Resend)
+// @desc    Send OTP (Nodemailer Gmail SMTP)
 // @route   POST /api/auth/send-otp
 // @access  Public
 export const sendOTP = async (req, res) => {
@@ -271,7 +271,7 @@ export const sendOTP = async (req, res) => {
     if (!user) user = await Artist.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -289,12 +289,12 @@ export const sendOTP = async (req, res) => {
     
     if (isBypass) {
       console.log("⚠️ [AUTH-BYPASS] Mocking OTP send success.");
-      return res.json({ message: 'OTP sent (Bypass Active)', bypass: true });
+      return res.json({ success: true, message: 'OTP sent (Bypass Active)', bypass: true });
     }
 
     try {
       await sendOTPEmail(email, otp, purpose === 'reset' ? 'reset' : 'verification');
-      res.json({ message: 'OTP sent to your email' });
+      res.json({ success: true, message: 'OTP sent to your email' });
     } catch (mailErr) {
       res.status(500).json({ success: false, message: mailErr.message });
     }
@@ -457,7 +457,7 @@ export const requestAdminOTP = async (req, res) => {
     await user.save();
 
     console.log("📧 [ADMIN-LOGIN] Triggering email service...");
-    await sendOTPEmail(email, otp, 'reset');
+    await sendOTPEmail(email, otp, 'admin_otp');
     
     console.log("✅ [ADMIN-LOGIN] OTP sequence successful");
     res.json({ success: true, message: 'Admin Access Code sent to your email' });
