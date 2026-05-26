@@ -30,16 +30,18 @@ console.log("🚦 [AUTH] Routes loading...");
 
 router.get('/diagnostic', async (req, res) => {
   try {
-    const resendDiag = getResendDiagnostics();
+    const diag = getResendDiagnostics();
     res.json({
       success: true,
-      resend_key_exists: resendDiag.raw_key_exists,
-      resend_key_length: resendDiag.raw_key_length,
-      resend_key_prefix: resendDiag.raw_key_prefix,
-      resend_initialized: resendDiag.initialized,
-      mongodb_connected: mongoose.connection.readyState === 1,
-      jwt_exists: !!process.env.JWT_SECRET,
-      node_env: process.env.NODE_ENV
+      node_env: diag.node_env,
+      mongodb: mongoose.connection.readyState === 1,
+      resend: {
+        initialized: diag.initialized,
+        raw_exists: diag.raw_key_exists,
+        raw_length: diag.raw_key_length,
+        sanitized_length: diag.sanitized_key_length,
+        sanitized_prefix: diag.sanitized_key_prefix
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
