@@ -14,9 +14,10 @@ const generateToken = (id, role) => {
 export const registerUser = async (req, res) => {
   try {
     const { name, password, role } = req.body;
-    const email = req.body.email ? req.body.email.toLowerCase() : '';
+    const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
+    const isBypass = process.env.BYPASS_OTP === 'true';
     
-    console.log("📝 [AUTH-DEBUG] Registration request:", { name, email, role });
+    console.log("📝 [AUTH-REGISTER] Request:", { name, email, role, isBypass });
 
     if (!email || !password || !name) {
       return res.status(400).json({ message: 'Name, email and password are required' });
@@ -30,24 +31,36 @@ export const registerUser = async (req, res) => {
       const existing = userExists || artistExists;
       // If user exists but is not verified, we can allow re-sending OTP
       if (!existing.isVerified) {
+        console.log("ℹ️ [AUTH-REGISTER] User exists but unverified. Re-sending OTP.");
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         existing.otp = otp;
         existing.otpExpire = Date.now() + 10 * 60 * 1000;
-        // Update other info in case user changed it
         existing.name = name;
         existing.password = password; 
         await existing.save();
 
-        const emailSent = await sendOTPEmail(email, otp, 'verification');
-        if (!emailSent) {
-          console.error(`❌ [AUTH-ERROR] Failed to send verification OTP to ${email}`);
-          return res.status(500).json({ message: 'Error sending verification email. Check backend logs.' });
+        if (isBypass) {
+          console.log("⚠️ [AUTH-BYPASS] Auto-verifying existing unverified user.");
+          existing.isVerified = true;
+          existing.otp = undefined;
+          existing.otpExpire = undefined;
+          await existing.save();
+          return res.status(200).json({
+            success: true,
+            message: 'User auto-verified (Bypass Active)',
+            user: { _id: existing._id, name: existing.name, email: existing.email, role: existing.role },
+            token: generateToken(existing._id, existing.role),
+          });
         }
 
-        return res.status(200).json({ message: 'Verification OTP sent to your email' });
+        try {
+          await sendOTPEmail(email, otp, 'verification');
+          return res.status(200).json({ message: 'Verification OTP sent to your email' });
+        } catch (mailErr) {
+          return res.status(500).json({ success: false, message: mailErr.message });
+        }
       }
       
-      console.log("❌ [AUTH-DEBUG] Registration failed: Email already verified", email);
       return res.status(400).json({ message: 'Email already registered and verified' });
     }
 
@@ -58,30 +71,15 @@ export const registerUser = async (req, res) => {
     let finalRole = role || 'user';
 
     if (finalRole === 'artist' || finalRole === 'podcaster') {
-      user = new Artist({
-        name,
-        email,
-        password,
-        role: 'artist',
-        otp,
-        otpExpire
-      });
+      user = new Artist({ name, email, password, role: 'artist', otp, otpExpire });
     } else {
-      user = new User({
-        name,
-        email,
-        password,
-        role: finalRole === 'admin' ? 'admin' : 'user',
-        otp,
-        otpExpire
-      });
+      user = new User({ name, email, password, role: finalRole === 'admin' ? 'admin' : 'user', otp, otpExpire });
     }
 
     await user.save();
 
-    // OTP Bypass for testing/stabilization
-    if (process.env.BYPASS_OTP === 'true') {
-      console.log("⚠️ [AUTH-BYPASS] OTP bypass active. Auto-verifying user.");
+    if (isBypass) {
+      console.log("⚠️ [AUTH-BYPASS] Auto-verifying new user.");
       user.isVerified = true;
       user.otp = undefined;
       user.otpExpire = undefined;
@@ -89,25 +87,19 @@ export const registerUser = async (req, res) => {
       return res.status(201).json({
         success: true,
         message: 'User created and auto-verified (Bypass Active)',
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
+        user: { _id: user._id, name: user.name, email: user.email, role: user.role },
         token: generateToken(user._id, user.role),
       });
     }
 
-    const emailSent = await sendOTPEmail(email, otp, 'verification');
-    if (!emailSent) {
-      console.error(`❌ [AUTH-ERROR] Failed to send verification OTP to ${email}`);
-      return res.status(500).json({ message: 'Error sending verification email. Check backend logs.' });
+    try {
+      await sendOTPEmail(email, otp, 'verification');
+      res.status(200).json({ message: 'Verification OTP sent to your email' });
+    } catch (mailErr) {
+      res.status(500).json({ success: false, message: mailErr.message });
     }
-
-    res.status(200).json({ message: 'Verification OTP sent to your email' });
   } catch (error) {
-    console.error("🔥 [AUTH-DEBUG] Registration error:", error.message);
+    console.error("🔥 [AUTH-REGISTER] FATAL ERROR:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -118,24 +110,22 @@ export const registerUser = async (req, res) => {
 export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log(`🔍 [AUTH-DEBUG] Verifying Registration OTP for: ${email}`);
+    const isBypass = process.env.BYPASS_OTP === 'true';
+    console.log(`🔍 [AUTH-VERIFY] Attempt for: ${email} (OTP: ${otp}, Bypass: ${isBypass})`);
 
-    let user = await User.findOne({ 
-      email: email.toLowerCase(),
-      otp: otp,
-      otpExpire: { $gt: Date.now() }
-    });
+    let user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) user = await Artist.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
-      user = await Artist.findOne({ 
-        email: email.toLowerCase(),
-        otp: otp,
-        otpExpire: { $gt: Date.now() }
-      });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    if (isBypass) {
+      console.log("⚠️ [AUTH-BYPASS] Accepting any OTP.");
+    } else {
+      if (user.otp !== otp || user.otpExpire < Date.now()) {
+        return res.status(400).json({ message: 'Invalid or expired OTP' });
+      }
     }
 
     user.isVerified = true;
@@ -143,17 +133,12 @@ export const verifyOTP = async (req, res) => {
     user.otpExpire = undefined;
     await user.save();
 
-    console.log(`✅ [AUTH-DEBUG] Email verified for: ${email}`);
+    console.log(`✅ [AUTH-VERIFY] SUCCESS for: ${email}`);
     
     res.json({
       success: true,
       message: 'Email verified successfully',
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role },
       token: generateToken(user._id, user.role),
     });
   } catch (error) {
@@ -284,8 +269,11 @@ export const authUser = async (req, res) => {
 export const sendOTP = async (req, res) => {
   try {
     const { email, purpose } = req.body;
-    let user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) user = await Artist.findOne({ email: email.toLowerCase() });
+    const isBypass = process.env.BYPASS_OTP === 'true';
+    console.log(`📝 [AUTH-SEND-OTP] Request for: ${email} (Purpose: ${purpose}, Bypass: ${isBypass})`);
+
+    let user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) user = await Artist.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -304,12 +292,17 @@ export const sendOTP = async (req, res) => {
 
     await user.save();
     
-    const emailSent = await sendOTPEmail(email, otp, purpose === 'reset' ? 'reset' : 'verification');
-    if (!emailSent) {
-      return res.status(500).json({ message: 'Error sending email' });
+    if (isBypass) {
+      console.log("⚠️ [AUTH-BYPASS] Mocking OTP send success.");
+      return res.json({ message: 'OTP sent (Bypass Active)', bypass: true });
     }
 
-    res.json({ message: 'OTP sent to your email' });
+    try {
+      await sendOTPEmail(email, otp, purpose === 'reset' ? 'reset' : 'verification');
+      res.json({ message: 'OTP sent to your email' });
+    } catch (mailErr) {
+      res.status(500).json({ success: false, message: mailErr.message });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -321,7 +314,10 @@ export const sendOTP = async (req, res) => {
 export const forgotPasswordUser = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const isBypass = process.env.BYPASS_OTP === 'true';
+    console.log(`📝 [AUTH-FORGOT-PASSWORD] Request for user: ${email} (Bypass: ${isBypass})`);
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found with this email' });
@@ -332,12 +328,17 @@ export const forgotPasswordUser = async (req, res) => {
     user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    const emailSent = await sendOTPEmail(email, otp, 'reset');
-    if (!emailSent) {
-      return res.status(500).json({ message: 'Error sending reset email' });
+    if (isBypass) {
+      console.log("⚠️ [AUTH-BYPASS] Mocking reset OTP send success.");
+      return res.json({ message: 'Reset OTP sent (Bypass Active)', bypass: true });
     }
 
-    res.json({ message: 'Reset OTP sent to your email' });
+    try {
+      await sendOTPEmail(email, otp, 'reset');
+      res.json({ message: 'Reset OTP sent to your email' });
+    } catch (mailErr) {
+      res.status(500).json({ success: false, message: mailErr.message });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -349,7 +350,10 @@ export const forgotPasswordUser = async (req, res) => {
 export const forgotPasswordArtist = async (req, res) => {
   try {
     const { email } = req.body;
-    const artist = await Artist.findOne({ email: email.toLowerCase() });
+    const isBypass = process.env.BYPASS_OTP === 'true';
+    console.log(`📝 [AUTH-FORGOT-PASSWORD] Request for artist: ${email} (Bypass: ${isBypass})`);
+
+    const artist = await Artist.findOne({ email: email.toLowerCase().trim() });
 
     if (!artist) {
       return res.status(404).json({ message: 'Artist not found with this email' });
@@ -360,12 +364,17 @@ export const forgotPasswordArtist = async (req, res) => {
     artist.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000;
     await artist.save();
 
-    const emailSent = await sendOTPEmail(email, otp, 'reset');
-    if (!emailSent) {
-      return res.status(500).json({ message: 'Error sending reset email' });
+    if (isBypass) {
+      console.log("⚠️ [AUTH-BYPASS] Mocking reset OTP send success.");
+      return res.json({ message: 'Reset OTP sent (Bypass Active)', bypass: true });
     }
 
-    res.json({ message: 'Reset OTP sent to your email' });
+    try {
+      await sendOTPEmail(email, otp, 'reset');
+      res.json({ message: 'Reset OTP sent to your email' });
+    } catch (mailErr) {
+      res.status(500).json({ success: false, message: mailErr.message });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

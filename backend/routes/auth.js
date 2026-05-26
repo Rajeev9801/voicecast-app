@@ -21,24 +21,24 @@ import {
   setAdminPassword
 } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { verifyMailConnection } from '../services/emailService.js';
+import { verifyMailConnection, getResendDiagnostics } from '../services/emailService.js';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 console.log("🚦 [AUTH] Routes loading...");
 
 router.get('/diagnostic', async (req, res) => {
   try {
-    const isConnected = await verifyMailConnection();
+    const resendDiag = getResendDiagnostics();
     res.json({
       success: true,
-      service: 'Resend',
-      email_configured: isConnected,
-      env: {
-        RESEND_API_KEY_SET: !!process.env.RESEND_API_KEY,
-        JWT_SECRET_SET: !!process.env.JWT_SECRET,
-        MONGO_URI_SET: !!process.env.MONGO_URI,
-        NODE_ENV: process.env.NODE_ENV
-      }
+      resend_key_exists: resendDiag.key_exists,
+      resend_key_prefix: resendDiag.key_prefix,
+      resend_initialized: resendDiag.initialized,
+      mongodb_connected: mongoose.connection.readyState === 1,
+      jwt_exists: !!process.env.JWT_SECRET,
+      bypass_otp: resendDiag.bypass_active,
+      node_env: process.env.NODE_ENV
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
