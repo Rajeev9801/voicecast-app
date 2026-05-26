@@ -37,16 +37,20 @@ export default function Home({ podcasts: initialPodcasts, trendingPodcasts }) {
         p.author?.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-  // Fallback loading if props are empty
+  // Ensure we always have fresh data on mount
   useEffect(() => {
-    if (!initialPodcasts || initialPodcasts.length === 0) {
-      const loadPodcasts = async () => {
+    const loadPodcasts = async () => {
+      try {
         const data = await podcastService.getRecommended();
-        setPodcasts(data);
-      };
-      loadPodcasts();
-    }
-  }, [initialPodcasts, setPodcasts]);
+        if (data && data.length > 0) {
+          setPodcasts(data);
+        }
+      } catch (error) {
+        console.error("Failed to refresh podcasts on home page:", error);
+      }
+    };
+    loadPodcasts();
+  }, [setPodcasts]);
 
   // Voice search event listener
   useEffect(() => {
