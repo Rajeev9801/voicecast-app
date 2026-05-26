@@ -432,7 +432,7 @@ export const resetPasswordArtist = async (req, res) => {
 export const requestAdminOTP = async (req, res) => {
   try {
     const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
-    const ADMIN_EMAIL = "rajeevkumar9801456p @gmail.com";
+    const ADMIN_EMAIL = "rajeevkumar9801456p@gmail.com";
 
     console.log("-----------------------------------------");
     console.log("🛡️ [ADMIN-LOGIN] Requesting OTP");
@@ -469,6 +469,12 @@ export const requestAdminOTP = async (req, res) => {
     user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000;
     await user.save();
 
+    const isBypass = process.env.BYPASS_OTP === 'true';
+    if (isBypass) {
+      console.log("⚠️ [ADMIN-BYPASS] Mocking Admin OTP send success.");
+      return res.json({ success: true, message: 'Admin Access Code sent (Bypass Active)', bypass: true });
+    }
+
     const emailSent = await sendOTPEmail(email, otp, 'reset');
     if (!emailSent) {
       console.error("❌ [ADMIN-LOGIN] Failed to send OTP email");
@@ -480,6 +486,49 @@ export const requestAdminOTP = async (req, res) => {
     console.log("-----------------------------------------");
   } catch (error) {
     console.error("🔥 [ADMIN-LOGIN-ERROR]:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Verify Admin OTP
+// @route   POST /api/auth/verify-admin-otp
+// @access  Public
+export const verifyAdminOTP = async (req, res) => {
+  try {
+    const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
+    const { otp } = req.body;
+    const isBypass = process.env.BYPASS_OTP === 'true';
+    const ADMIN_EMAIL = "rajeevkumar9801456p@gmail.com";
+
+    console.log(`🔍 [ADMIN-VERIFY] Attempt for: ${email} (OTP: ${otp}, Bypass: ${isBypass})`);
+
+    const cleanInput = email.replace(/\s/g, '');
+    const cleanTarget = ADMIN_EMAIL.replace(/\s/g, '');
+
+    if (cleanInput !== cleanTarget) {
+      return res.status(403).json({ success: false, message: "Access Denied" });
+    }
+
+    const user = await User.findOne({ email: cleanInput });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Admin user not found" });
+    }
+
+    if (isBypass) {
+      console.log("⚠️ [ADMIN-BYPASS] Accepting any OTP.");
+    } else {
+      if (user.resetPasswordOTP !== otp || user.resetPasswordOTPExpire < Date.now()) {
+        return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+      }
+    }
+
+    console.log(`✅ [ADMIN-VERIFY] SUCCESS for: ${email}`);
+    
+    res.json({
+      success: true,
+      message: 'OTP verified successfully'
+    });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };

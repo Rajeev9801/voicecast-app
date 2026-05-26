@@ -105,7 +105,7 @@ const AdminLogin = () => {
       console.log("🛡️ [ADMIN-DEBUG] STEP: handleRequestOTP");
       console.log("🛡️ [ADMIN-DEBUG] EMAIL:", email);
       
-      const response = await api.post('/api/auth/admin/request-otp', { email });
+      const response = await api.post('/api/auth/request-admin-otp', { email });
       
       console.log("🛡️ [ADMIN-DEBUG] API RESPONSE:", response);
       console.log("🛡️ [ADMIN-DEBUG] STATUS:", response.status);
@@ -137,7 +137,7 @@ const AdminLogin = () => {
       console.log("🔍 [ADMIN-DEBUG] STEP: handleVerifyOTP");
       console.log("🔍 [ADMIN-DEBUG] PAYLOAD:", { email, otp });
       
-      const response = await api.post('/api/auth/verify-reset-otp', { email, otp });
+      const response = await api.post('/api/auth/verify-admin-otp', { email, otp });
       
       console.log("🔍 [ADMIN-DEBUG] API RESPONSE:", response);
       console.log("🔍 [ADMIN-DEBUG] STATUS:", response.status);

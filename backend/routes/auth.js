@@ -18,6 +18,7 @@ import {
   verifyOTP,
   sendOTP,
   requestAdminOTP,
+  verifyAdminOTP,
   setAdminPassword
 } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
@@ -53,6 +54,8 @@ router.post('/login/:role', authUser);
 
 // Admin specific login/setup routes
 router.post('/admin/request-otp', requestAdminOTP);
+router.post('/request-admin-otp', requestAdminOTP); // Alias
+router.post('/verify-admin-otp', verifyAdminOTP);
 router.post('/admin/set-password', setAdminPassword);
 
 // Generic Forgot Password (for users)
