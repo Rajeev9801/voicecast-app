@@ -14,11 +14,16 @@ const SENDER_NAME = "VoiceCast Support";
 
 // Create reusable transporter object using Gmail SMTP
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // SSL
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
   },
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
 });
 
 // Maintain interface for server.js compatibility
